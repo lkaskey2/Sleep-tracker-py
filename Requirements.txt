@@ -1,8 +1,0 @@
-streamlit
-pandas
-numpy
-scipy
-matplotlib
-gspread
-google-auth
-google-auth-oauthlib
