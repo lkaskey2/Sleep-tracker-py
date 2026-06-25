@@ -158,7 +158,7 @@ COLUMNS = [
     # Lifestyle
     "exercise", "exercise_intensity", "exercise_hrs_before_bed",
     "alcohol_drinks", "alcohol_hrs_before_bed",
-    "stress_level",
+    "stress_level", "worked_past_9pm",
     "screen_time_before_bed_min",
     # Events / notes
     "events", "notes"
@@ -325,6 +325,7 @@ with tab_log:
             alc_hrs = st.number_input("Last drink (hrs before bed)", 0.0, 24.0, 3.0, 0.5)
 
         stress = st.slider("Stress level (1–10)", 1, 10, 5)
+        worked_late = st.checkbox("Worked past 9 PM")
         screen_min = st.number_input("Screen time before bed (min)", 0, 300, 30, 5)
 
         events = st.text_input("One-off events (travel, illness, conflict…)")
@@ -379,6 +380,7 @@ with tab_log:
             "exercise_hrs_before_bed": ex_hrs_before,
             "alcohol_drinks": alcohol, "alcohol_hrs_before_bed": alc_hrs,
             "stress_level": stress,
+            "worked_past_9pm": int(worked_late),
             "screen_time_before_bed_min": screen_min,
             "events": events, "notes": notes
         }
@@ -445,7 +447,7 @@ with tab_corr:
 
         factors = []
         for col in ["med1_hrs_before_bed","med2_hrs_before_bed","med3_hrs_before_bed",
-                    "exercise","alcohol_drinks","stress_level",
+                    "exercise","alcohol_drinks","stress_level","worked_past_9pm",
                     "screen_time_before_bed_min","nap_minutes"]:
             if col in df.columns:
                 factors.append(col)
@@ -457,6 +459,7 @@ with tab_corr:
             "exercise": "Exercised (0/1)",
             "alcohol_drinks": "Alcohol (drinks)",
             "stress_level": "Stress Level",
+            "worked_past_9pm": "Worked Past 9 PM (0/1)",
             "screen_time_before_bed_min": "Screen Time (min)",
             "nap_minutes": "Nap Duration (min)"
         }
