@@ -11,7 +11,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from scipy import stats
-from datetime import datetime, date, time
+from datetime import datetime, date
 import json
 import gspread
 from google.oauth2.service_account import Credentials
@@ -131,7 +131,6 @@ def time_to_float(t_str):
     except: return np.nan
 
 def to_12hr(t_str):
-    """Convert HH:MM (24hr) to 12hr display string."""
     try:
         h, m = map(int, t_str.split(":"))
         period = "AM" if h < 12 else "PM"
@@ -139,6 +138,27 @@ def to_12hr(t_str):
         if h12 == 0: h12 = 12
         return f"{h12}:{m:02d} {period}"
     except: return t_str
+
+def time_picker(label, key, default_hour=12, default_minute=0, default_period="PM"):
+    """12hr time picker using dropdowns. Returns HH:MM string in 24hr format."""
+    hours   = [str(h) for h in range(1, 13)]
+    minutes = ["00","05","10","15","20","25","30","35","40","45","50","55"]
+    periods = ["AM","PM"]
+    c1, c2, c3 = st.columns([2,2,2])
+    with c1:
+        hr = st.selectbox("Hour", hours, index=hours.index(str(default_hour)),
+                          key=f"{key}_hr", label_visibility="collapsed")
+    with c2:
+        mn = st.selectbox("Min", minutes,
+                          index=minutes.index(f"{default_minute:02d}") if f"{default_minute:02d}" in minutes else 0,
+                          key=f"{key}_mn", label_visibility="collapsed")
+    with c3:
+        period = st.selectbox("AM/PM", periods,
+                              index=periods.index(default_period),
+                              key=f"{key}_ampm", label_visibility="collapsed")
+    # Convert to 24hr
+    h24 = int(hr) % 12 + (12 if period == "PM" else 0)
+    return f"{h24:02d}:{mn}"
 
 def hours_before_bed(med_time_str, bedtime_str):
     try:
@@ -237,8 +257,8 @@ with tab_log:
         st.markdown('<div class="section-header">Sleep</div>', unsafe_allow_html=True)
         log_date = st.date_input("Date", value=date.today())
         c1, c2 = st.columns(2)
-        with c1: bedtime = st.time_input("Bedtime (use AM/PM)", value=time(23,0))
-        bed_str = bedtime.strftime("%H:%M")
+        st.markdown("**Bedtime**")
+        bed_str = time_picker("Bedtime", key="bedtime", default_hour=11, default_minute=0, default_period="PM")
         wake_str = ""
         st.markdown(f'<div class="info-box">Bedtime: <strong>{to_12hr(bed_str)}</strong></div>', unsafe_allow_html=True)
         sleep_dur = st.number_input("Sleep duration (hrs)", value=7.0,
@@ -300,11 +320,9 @@ with tab_log:
                     dose_val = st.text_input(f"{label} amount",
                                               value=f"{default_dose}{unit}",
                                               key=f"dose_{med_name}_{d}")
-                with c2:
-                    med_t = st.time_input(f"{label} time taken",
-                                           key=f"time_{med_name}_{d}",
-                                           value=time(12,0))
-                mtime_str = med_t.strftime("%H:%M")
+                st.markdown(f"**{label} time taken**")
+                mtime_str = time_picker(f"{label} time", key=f"time_{med_name}_{d}",
+                                        default_hour=12, default_minute=0, default_period="PM")
                 hrs_bf = hours_before_bed(mtime_str, bed_str)
                 st.markdown(f'<div class="info-box">⏱ {med_name} {label} — {dose_val} at <strong>{to_12hr(mtime_str)}</strong> ({hrs_bf:.1f} hrs before bed)</div>', unsafe_allow_html=True)
                 med_rows.append({"name": f"{med_name} (dose {d+1})" if num_doses > 1 else med_name,
@@ -314,12 +332,13 @@ with tab_log:
     st.markdown("**➕ Add custom medication**")
     num_custom = st.number_input("How many custom meds to add?", 0, 5, 0, step=1)
     for i in range(int(num_custom)):
-        c1, c2, c3 = st.columns([2,1,1])
+        c1, c2 = st.columns(2)
         with c1: cname = st.text_input(f"Custom Med {i+1} name", key=f"cname{i}")
         with c2: cdose = st.text_input("Dose", key=f"cdose{i}", placeholder="e.g. 10mg")
-        with c3: ctime = st.time_input("Time", key=f"ctime{i}", value=time(12,0))
+        st.markdown(f"**Custom Med {i+1} time taken**")
+        ctime_str = time_picker(f"Custom med {i+1}", key=f"ctime{i}",
+                                 default_hour=12, default_minute=0, default_period="PM")
         if cname.strip():
-            ctime_str = ctime.strftime("%H:%M")
             hrs_bf = hours_before_bed(ctime_str, bed_str)
             st.markdown(f'<div class="info-box">⏱ {cname} — {cdose} at <strong>{to_12hr(ctime_str)}</strong> ({hrs_bf:.1f} hrs before bed)</div>', unsafe_allow_html=True)
             med_rows.append({"name": cname, "dose": cdose, "time": ctime_str, "hrs": hrs_bf})
