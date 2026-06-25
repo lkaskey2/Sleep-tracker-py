@@ -23,38 +23,64 @@ st.set_page_config(page_title="Sleep Tracker", page_icon="🌙", layout="wide")
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
-html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-.stApp { background-color: #0d1117; color: #e6edf3; }
-[data-testid="stSidebar"] { background-color: #161b22; }
-.metric-card { background:#161b22; border:1px solid #21262d; border-radius:10px;
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap');
+html, body, [class*="css"] { font-family: 'Share Tech Mono', monospace; }
+.stApp { background-color: #000000; color: #00ff41; }
+[data-testid="stSidebar"] { background-color: #001a00; border-right: 1px solid #00ff41; }
+.metric-card { background:#001a00; border:1px solid #00ff41; border-radius:4px;
                padding:18px 22px; margin-bottom:12px; }
 .metric-label { font-size:11px; font-weight:600; letter-spacing:0.08em;
-                color:#7d8590; text-transform:uppercase; margin-bottom:4px; }
-.metric-value { font-size:28px; font-weight:600; color:#58a6ff; font-family:monospace; }
-.metric-sub   { font-size:12px; color:#7d8590; margin-top:2px; }
+                color:#00aa2a; text-transform:uppercase; margin-bottom:4px; }
+.metric-value { font-size:28px; font-weight:600; color:#58a6ff; font-family:'Share Tech Mono',monospace; }
+.metric-sub   { font-size:12px; color:#00aa2a; margin-top:2px; }
 .section-header { font-size:13px; font-weight:600; letter-spacing:0.1em;
                   text-transform:uppercase; color:#58a6ff;
-                  border-bottom:1px solid #21262d; padding-bottom:8px; margin-bottom:16px; }
-.info-box { background:#1c2128; border:1px solid #30363d; border-radius:8px;
-            padding:12px 16px; font-size:12px; color:#8b949e; margin:8px 0; }
-label { color:#e6edf3 !important; font-size:13px !important; }
-.stButton > button { background:#238636; color:white; border:none;
-                     border-radius:6px; font-weight:600; font-size:13px;
+                  border-bottom:1px solid #00ff41; padding-bottom:8px; margin-bottom:16px; }
+.info-box { background:#001a00; border:1px solid #00aa2a; border-radius:4px;
+            padding:12px 16px; font-size:12px; color:#00ff41; margin:8px 0; }
+label { color:#00ff41 !important; font-size:13px !important; }
+p, span, div { color:#00ff41; }
+.stButton > button { background:#003300; color:#00ff41; border:1px solid #00ff41;
+                     border-radius:4px; font-weight:600; font-size:13px;
+                     font-family:'Share Tech Mono',monospace;
                      padding:8px 20px; width:100%; }
+.stButton > button:hover { background:#00ff41; color:#000000; }
+input, select, textarea {
+    background:#001a00 !important; color:#00ff41 !important;
+    border:1px solid #00aa2a !important; border-radius:4px !important;
+    font-family:'Share Tech Mono',monospace !important;
+}
+.stCheckbox label { color:#00ff41 !important; }
+.stRadio label { color:#00ff41 !important; }
+.stSelectbox label { color:#00ff41 !important; }
+.stNumberInput label { color:#00ff41 !important; }
+.stTextInput label { color:#00ff41 !important; }
+.stTextArea label { color:#00ff41 !important; }
+.stDateInput label { color:#00ff41 !important; }
+.stMarkdown { color:#00ff41; }
+h1, h2, h3 { color:#58a6ff !important; }
+/* Scrollbar */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:#001a00; }
+::-webkit-scrollbar-thumb { background:#00ff41; border-radius:3px; }
+/* Tab styling */
+.stTabs [data-baseweb="tab"] { color:#00aa2a; font-family:'Share Tech Mono',monospace; }
+.stTabs [aria-selected="true"] { color:#00ff41 !important; border-bottom:2px solid #58a6ff !important; }
+/* Dataframe */
+.dataframe { color:#00ff41 !important; background:#001a00 !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── PLOT STYLE ────────────────────────────────────────────────────────────────
-BG    = "#0d1117"
-CARD  = "#161b22"
+BG    = "#000000"
+CARD  = "#001a00"
 BLUE  = "#58a6ff"
-GREEN = "#3fb950"
-RED   = "#f85149"
-ORANGE= "#f78166"
-TEXT  = "#e6edf3"
-MUTED = "#7d8590"
-BORDER= "#21262d"
+GREEN = "#00ff41"
+RED   = "#ff4444"
+ORANGE= "#00cc33"
+TEXT  = "#00ff41"
+MUTED = "#00aa2a"
+BORDER= "#00ff41"
 
 def style_ax(ax, title="", xlabel="", ylabel=""):
     ax.set_facecolor(CARD)
@@ -280,10 +306,11 @@ with tab_log:
         st.markdown('<div class="section-header">Lifestyle</div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         with c1:
-            stress = st.number_input("Stress (1–10)", 1, 10, 5, step=1)
-        with c2:
-            st.markdown("<br>", unsafe_allow_html=True)
             exercised = st.checkbox("Exercised today")
+        with c2:
+            stress = st.radio("Stress", ["Low","Med","High"],
+                              index=1, horizontal=True,
+                              label_visibility="visible")
         ex_intensity, ex_hrs_before = "", np.nan
         if exercised:
             c1, c2 = st.columns(2)
@@ -305,45 +332,72 @@ with tab_log:
         notes  = st.text_area("Notes", height=60)
 
     st.markdown('<div class="section-header">Medications / Supplements</div>', unsafe_allow_html=True)
-    st.markdown('<div class="info-box">Check each medication taken. Use + to add a second dose if you took it twice.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="info-box">Check each medication taken. Select when and how many doses.</div>', unsafe_allow_html=True)
 
-    # Pre-defined medication list (display name, default dose, unit)
+    # Time slot labels and representative times for hrs-before-bed calc
+    TIME_SLOTS = {
+        "AM Early (12–4:59 AM)": "02:30",
+        "AM (5–11:59 AM)":       "08:30",
+        "PM Early (12–4:59 PM)": "14:30",
+        "PM (5–11:59 PM)":       "20:30",
+    }
+
     PRESET_MEDS = [
-        ("Vitamin A",          "20",   "mg"),
-        ("Vitamin K",          "100",  "mg"),
-        ("Unisom",             "50",   "mg"),
-        ("Vitamin B12",        "1000", "mcg"),
-        ("Magnesium",          "400",  "mg"),
-        ("Magnesium Glyconate","400",  "mg"),
-        ("Magnesium Threonate","2000", "mg"),
-        ("Vitamin C",          "500",  "mg"),
-        ("L-Arginine",         "3000", "mg"),
-        ("L-Carnitine",        "1800", "mg"),
-        ("Vitamin T",          "50",   "mg"),
-        ("Vitamin G",          "600",  "mg"),
+        ("Vitamin A",           20,   "mg"),
+        ("Vitamin K",           100,  "mg"),
+        ("Unisom",              50,   "mg"),
+        ("Vitamin B12",         1000, "mcg"),
+        ("Magnesium",           400,  "mg"),
+        ("Magnesium Glyconate", 400,  "mg"),
+        ("Magnesium Threonate", 2000, "mg"),
+        ("Vitamin C",           500,  "mg"),
+        ("L-Arginine",          3000, "mg"),
+        ("L-Carnitine",         1800, "mg"),
+        ("Vitamin T",           50,   "mg"),
+        ("Vitamin G",           600,  "mg"),
     ]
 
     med_rows = []
+
     for med_name, default_dose, unit in PRESET_MEDS:
         took = st.checkbox(med_name, key=f"chk_{med_name}")
         if took:
-            # How many doses today?
-            num_doses = st.number_input(f"How many doses of {med_name}?",
-                                         1, 4, 1, step=1, key=f"ndoses_{med_name}")
-            for d in range(int(num_doses)):
-                label = f"Dose {d+1}" if num_doses > 1 else "Dose"
-                c1, c2 = st.columns(2)
-                with c1:
-                    dose_val = st.text_input(f"{label} amount",
-                                              value=f"{default_dose}{unit}",
-                                              key=f"dose_{med_name}_{d}")
-                st.markdown(f"**{label} time taken**")
-                mtime_str = time_picker("", key=f"time_{med_name}_{d}",
-                                        default_hour=12, default_minute=0, default_period="PM")
-                hrs_bf = hours_before_bed(mtime_str, bed_str)
-                st.markdown(f'<div class="info-box">⏱ {med_name} {label} — {dose_val} at <strong>{to_12hr(mtime_str)}</strong> ({hrs_bf:.1f} hrs before bed)</div>', unsafe_allow_html=True)
-                med_rows.append({"name": f"{med_name} (dose {d+1})" if num_doses > 1 else med_name,
-                                  "dose": dose_val, "time": mtime_str, "hrs": hrs_bf})
+            # Dose amount checkboxes
+            half  = default_dose * 0.5
+            one5x = default_dose * 1.5
+            twox  = default_dose * 2
+            dose_options = {
+                f"{half:.0f}{unit}":        f"{half:.0f}{unit}",
+                f"{default_dose}{unit}":    f"{default_dose}{unit}",
+                f"{one5x:.0f}{unit}":       f"{one5x:.0f}{unit}",
+                f"{twox:.0f}{unit}":        f"{twox:.0f}{unit}",
+            }
+            st.markdown(f"**{med_name} — Dose:**")
+            selected_dose_label = st.radio(
+                f"Dose amount for {med_name}",
+                list(dose_options.keys()),
+                index=1,
+                horizontal=True,
+                key=f"doseamt_{med_name}",
+                label_visibility="collapsed"
+            )
+            dose_val = dose_options[selected_dose_label]
+
+            # Number of doses — checkboxes for up to 4
+            st.markdown(f"**{med_name} — When taken (check all that apply):**")
+            slot_cols = st.columns(4)
+            dose_times = []
+            for i, (slot_label, slot_time) in enumerate(TIME_SLOTS.items()):
+                with slot_cols[i]:
+                    if st.checkbox(slot_label, key=f"slot_{med_name}_{i}"):
+                        dose_times.append((slot_label, slot_time))
+
+            for d, (slot_label, slot_time) in enumerate(dose_times):
+                hrs_bf = hours_before_bed(slot_time, bed_str)
+                dose_name = f"{med_name} (dose {d+1})" if len(dose_times) > 1 else med_name
+                st.markdown(f'<div class="info-box">⏱ {dose_name} — {dose_val} at <strong>{slot_label}</strong> ({hrs_bf:.1f} hrs before bed)</div>', unsafe_allow_html=True)
+                med_rows.append({"name": dose_name, "dose": dose_val,
+                                  "time": slot_time, "hrs": hrs_bf})
 
     # Custom medications
     st.markdown("**➕ Add custom medication**")
@@ -352,13 +406,14 @@ with tab_log:
         c1, c2 = st.columns(2)
         with c1: cname = st.text_input(f"Custom Med {i+1} name", key=f"cname{i}")
         with c2: cdose = st.text_input("Dose", key=f"cdose{i}", placeholder="e.g. 10mg")
-        st.markdown(f"**Custom Med {i+1} time taken**")
-        ctime_str = time_picker(f"Custom med {i+1}", key=f"ctime{i}",
-                                 default_hour=12, default_minute=0, default_period="PM")
-        if cname.strip():
-            hrs_bf = hours_before_bed(ctime_str, bed_str)
-            st.markdown(f'<div class="info-box">⏱ {cname} — {cdose} at <strong>{to_12hr(ctime_str)}</strong> ({hrs_bf:.1f} hrs before bed)</div>', unsafe_allow_html=True)
-            med_rows.append({"name": cname, "dose": cdose, "time": ctime_str, "hrs": hrs_bf})
+        st.markdown(f"**Custom Med {i+1} — When taken:**")
+        cslot_cols = st.columns(4)
+        for j, (slot_label, slot_time) in enumerate(TIME_SLOTS.items()):
+            with cslot_cols[j]:
+                if st.checkbox(slot_label, key=f"cslot_{i}_{j}") and cname.strip():
+                    hrs_bf = hours_before_bed(slot_time, bed_str)
+                    med_rows.append({"name": cname, "dose": cdose,
+                                      "time": slot_time, "hrs": hrs_bf})
 
     # Pad to at least 3 slots for sheet compatibility
     while len(med_rows) < 3:
@@ -379,7 +434,8 @@ with tab_log:
             "all_meds": str([{"name":m["name"],"dose":m["dose"],"time":m["time"],"hrs":m["hrs"]} for m in med_rows if m["name"]]),
             "exercise":int(exercised),"exercise_intensity":ex_intensity,
             "exercise_hrs_before_bed":ex_hrs_before,
-            "stress_level":stress,"worked_past_9pm":int(worked_late),
+            "stress_level":{"Low":1,"Med":2,"High":3}[stress],
+            "worked_past_9pm":int(worked_late),
             "sleep_location":sleep_location,"slept_with":slept_with,
             "events":events,"notes":notes
         }
@@ -437,7 +493,7 @@ with tab_corr:
             "med2_hrs_before_bed":"Med 2 — hrs before bed",
             "med3_hrs_before_bed":"Med 3 — hrs before bed",
             "exercise":"Exercised (0/1)",
-            "stress_level":"Stress Level",
+            "stress_level":"Stress Level (Low=1, Med=2, High=3)",
             "worked_past_9pm":"Worked Past 9 PM",
             "sleep_location_home":"Slept at Home (0/1)",
             "sleep_location_elizabeth":"Slept at Elizabeth's (0/1)",
