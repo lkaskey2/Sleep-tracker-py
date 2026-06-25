@@ -280,9 +280,10 @@ with tab_log:
         st.markdown('<div class="section-header">Lifestyle</div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         with c1:
-            exercised = st.checkbox("Exercised today")
-        with c2:
             stress = st.number_input("Stress (1–10)", 1, 10, 5, step=1)
+        with c2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            exercised = st.checkbox("Exercised today")
         ex_intensity, ex_hrs_before = "", np.nan
         if exercised:
             c1, c2 = st.columns(2)
