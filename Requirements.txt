@@ -2,7 +2,7 @@ streamlit
 pandas
 numpy
 scipy
-plotly=5.14.1
+matplotlib
 gspread
 google-auth
 google-auth-oauthlib
