@@ -23,64 +23,38 @@ st.set_page_config(page_title="Sleep Tracker", page_icon="🌙", layout="wide")
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap');
-html, body, [class*="css"] { font-family: 'Share Tech Mono', monospace; }
-.stApp { background-color: #000000; color: #00ff41; }
-[data-testid="stSidebar"] { background-color: #001a00; border-right: 1px solid #00ff41; }
-.metric-card { background:#001a00; border:1px solid #00ff41; border-radius:4px;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+.stApp { background-color: #0d1117; color: #e6edf3; }
+[data-testid="stSidebar"] { background-color: #161b22; }
+.metric-card { background:#161b22; border:1px solid #21262d; border-radius:10px;
                padding:18px 22px; margin-bottom:12px; }
 .metric-label { font-size:11px; font-weight:600; letter-spacing:0.08em;
-                color:#00aa2a; text-transform:uppercase; margin-bottom:4px; }
-.metric-value { font-size:28px; font-weight:600; color:#58a6ff; font-family:'Share Tech Mono',monospace; }
-.metric-sub   { font-size:12px; color:#00aa2a; margin-top:2px; }
+                color:#7d8590; text-transform:uppercase; margin-bottom:4px; }
+.metric-value { font-size:28px; font-weight:600; color:#58a6ff; font-family:monospace; }
+.metric-sub   { font-size:12px; color:#7d8590; margin-top:2px; }
 .section-header { font-size:13px; font-weight:600; letter-spacing:0.1em;
                   text-transform:uppercase; color:#58a6ff;
-                  border-bottom:1px solid #00ff41; padding-bottom:8px; margin-bottom:16px; }
-.info-box { background:#001a00; border:1px solid #00aa2a; border-radius:4px;
-            padding:12px 16px; font-size:12px; color:#00ff41; margin:8px 0; }
-label { color:#00ff41 !important; font-size:13px !important; }
-p, span, div { color:#00ff41; }
-.stButton > button { background:#003300; color:#00ff41; border:1px solid #00ff41;
-                     border-radius:4px; font-weight:600; font-size:13px;
-                     font-family:'Share Tech Mono',monospace;
+                  border-bottom:1px solid #21262d; padding-bottom:8px; margin-bottom:16px; }
+.info-box { background:#1c2128; border:1px solid #30363d; border-radius:8px;
+            padding:12px 16px; font-size:12px; color:#8b949e; margin:8px 0; }
+label { color:#e6edf3 !important; font-size:13px !important; }
+.stButton > button { background:#238636; color:white; border:none;
+                     border-radius:6px; font-weight:600; font-size:13px;
                      padding:8px 20px; width:100%; }
-.stButton > button:hover { background:#00ff41; color:#000000; }
-input, select, textarea {
-    background:#001a00 !important; color:#00ff41 !important;
-    border:1px solid #00aa2a !important; border-radius:4px !important;
-    font-family:'Share Tech Mono',monospace !important;
-}
-.stCheckbox label { color:#00ff41 !important; }
-.stRadio label { color:#00ff41 !important; }
-.stSelectbox label { color:#00ff41 !important; }
-.stNumberInput label { color:#00ff41 !important; }
-.stTextInput label { color:#00ff41 !important; }
-.stTextArea label { color:#00ff41 !important; }
-.stDateInput label { color:#00ff41 !important; }
-.stMarkdown { color:#00ff41; }
-h1, h2, h3 { color:#58a6ff !important; }
-/* Scrollbar */
-::-webkit-scrollbar { width:6px; }
-::-webkit-scrollbar-track { background:#001a00; }
-::-webkit-scrollbar-thumb { background:#00ff41; border-radius:3px; }
-/* Tab styling */
-.stTabs [data-baseweb="tab"] { color:#00aa2a; font-family:'Share Tech Mono',monospace; }
-.stTabs [aria-selected="true"] { color:#00ff41 !important; border-bottom:2px solid #58a6ff !important; }
-/* Dataframe */
-.dataframe { color:#00ff41 !important; background:#001a00 !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── PLOT STYLE ────────────────────────────────────────────────────────────────
-BG    = "#000000"
-CARD  = "#001a00"
+BG    = "#0d1117"
+CARD  = "#161b22"
 BLUE  = "#58a6ff"
-GREEN = "#00ff41"
-RED   = "#ff4444"
-ORANGE= "#00cc33"
-TEXT  = "#00ff41"
-MUTED = "#00aa2a"
-BORDER= "#00ff41"
+GREEN = "#3fb950"
+RED   = "#f85149"
+ORANGE= "#f78166"
+TEXT  = "#e6edf3"
+MUTED = "#7d8590"
+BORDER= "#21262d"
 
 def style_ax(ax, title="", xlabel="", ylabel=""):
     ax.set_facecolor(CARD)
@@ -289,13 +263,10 @@ with tab_log:
     col_a, col_b = st.columns(2)
 
     with col_a:
-        st.markdown('<div class="section-header">Sleep</div>', unsafe_allow_html=True)
         log_date = st.date_input("Sleep Date", value=date.today())
         st.markdown('<div class="info-box">📅 Sleep date is the date your day <strong>started</strong> (5:00 AM). Times between 12:00 AM–4:59 AM automatically belong to this log entry.</div>', unsafe_allow_html=True)
-        c1, c2 = st.columns(2)
         bed_str = time_picker("Bedtime", key="bedtime", default_hour=11, default_minute=0, default_period="PM")
         wake_str = ""
-        st.markdown(f'<div class="info-box">Bedtime: <strong>{to_12hr(bed_str)}</strong></div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         with c1:
             sleep_dur = st.number_input("Duration (hrs)", value=7.0, min_value=0.0, max_value=24.0, step=0.25)
@@ -336,10 +307,10 @@ with tab_log:
 
     # Time slot labels and representative times for hrs-before-bed calc
     TIME_SLOTS = {
-        "AM Early (12–4:59 AM)": "02:30",
-        "AM (5–11:59 AM)":       "08:30",
-        "PM Early (12–4:59 PM)": "14:30",
-        "PM (5–11:59 PM)":       "20:30",
+        "AM Early (12:00 AM - 4:59 AM)": "02:30",
+        "AM (5:00 AM - 11:59 AM)":       "08:30",
+        "PM Early (12:00 PM - 4:59 PM)": "14:30",
+        "PM (5:00 PM - 11:59 PM)":       "20:30",
     }
 
     PRESET_MEDS = [
@@ -395,7 +366,7 @@ with tab_log:
             for d, (slot_label, slot_time) in enumerate(dose_times):
                 hrs_bf = hours_before_bed(slot_time, bed_str)
                 dose_name = f"{med_name} (dose {d+1})" if len(dose_times) > 1 else med_name
-                st.markdown(f'<div class="info-box">⏱ {dose_name} — {dose_val} at <strong>{slot_label}</strong> ({hrs_bf:.1f} hrs before bed)</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="info-box">⏱ {dose_name} — {dose_val} taken in the <strong>{slot_label}</strong> ({hrs_bf:.1f} hrs before bed)</div>', unsafe_allow_html=True)
                 med_rows.append({"name": dose_name, "dose": dose_val,
                                   "time": slot_time, "hrs": hrs_bf})
 
