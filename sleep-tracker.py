@@ -77,8 +77,8 @@ COLUMNS = [
     "med2_name","med2_dose","med2_time","med2_hrs_before_bed",
     "med3_name","med3_dose","med3_time","med3_hrs_before_bed",
     "exercise","exercise_intensity","exercise_hrs_before_bed",
-    "alcohol_drinks","alcohol_hrs_before_bed",
-    "stress_level","worked_past_9pm","screen_time_before_bed_min",
+    "stress_level","worked_past_9pm",
+    "sleep_location","slept_with",
     "events","notes"
 ]
 
@@ -242,56 +242,68 @@ with tab_log:
         if exercised:
             ex_intensity = st.selectbox("Intensity", ["Light","Moderate","Intense"], index=1)
             ex_hrs_before = st.number_input("Hrs before bed", 0.0, 24.0, 4.0, 0.5, key="ex")
-        alcohol = st.number_input("Alcoholic drinks", 0, 20, 0)
-        alc_hrs = np.nan
-        if alcohol > 0:
-            alc_hrs = st.number_input("Last drink (hrs before bed)", 0.0, 24.0, 3.0, 0.5)
         stress = st.number_input("Stress level (1–10)", 1, 10, 5, step=1)
         worked_late = st.checkbox("Worked past 9 PM")
-        screen_min = st.number_input("Screen time before bed (min)", 0, 300, 30, 5)
+
+        st.markdown("**Where did you sleep?**")
+        sleep_location = st.radio("Location", ["Home","Elizabeth's","Hotel"], horizontal=True,
+                                   label_visibility="collapsed")
+
+        st.markdown("**Slept with?**")
+        slept_with = st.radio("With", ["Alone","Elizabeth"], horizontal=True,
+                               label_visibility="collapsed")
+
         events = st.text_input("One-off events (travel, illness…)")
         notes  = st.text_area("Notes", height=60)
 
     st.markdown('<div class="section-header">Medications / Supplements</div>', unsafe_allow_html=True)
-    st.markdown('<div class="info-box">Check each medication taken tonight. Adjust dose and time as needed. Add custom meds at the bottom.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="info-box">Check each medication taken. Use + to add a second dose if you took it twice.</div>', unsafe_allow_html=True)
 
     # Pre-defined medication list (display name, default dose, unit)
     PRESET_MEDS = [
-        ("Vitamin A",         "20",   "mg"),
-        ("Vitamin K",         "100",  "mg"),
-        ("Unisom",            "50",   "mg"),
-        ("Vitamin B12",       "1000", "mcg"),
-        ("Magnesium",         "400",  "mg"),
-        ("Magnesium Glyconate","400", "mg"),
-        ("Magnesium Threonate","2000","mg"),
-        ("Vitamin C",         "500",  "mg"),
-        ("L-Arginine",        "3000", "mg"),
-        ("L-Carnitine",       "1800", "mg"),
-        ("Vitamin T",         "50",   "mg"),
-        ("Vitamin G",         "600",  "mg"),
+        ("Vitamin A",          "20",   "mg"),
+        ("Vitamin K",          "100",  "mg"),
+        ("Unisom",             "50",   "mg"),
+        ("Vitamin B12",        "1000", "mcg"),
+        ("Magnesium",          "400",  "mg"),
+        ("Magnesium Glyconate","400",  "mg"),
+        ("Magnesium Threonate","2000", "mg"),
+        ("Vitamin C",          "500",  "mg"),
+        ("L-Arginine",         "3000", "mg"),
+        ("L-Carnitine",        "1800", "mg"),
+        ("Vitamin T",          "50",   "mg"),
+        ("Vitamin G",          "600",  "mg"),
     ]
 
     med_rows = []
     for med_name, default_dose, unit in PRESET_MEDS:
-        col_chk, col_dose, col_time = st.columns([2,1,1])
-        with col_chk:
-            took = st.checkbox(med_name, key=f"chk_{med_name}")
+        took = st.checkbox(med_name, key=f"chk_{med_name}")
         if took:
-            with col_dose:
-                dose_val = st.text_input("Dose", value=f"{default_dose}{unit}",
-                                          key=f"dose_{med_name}")
-            with col_time:
-                med_t = st.time_input("Time", key=f"time_{med_name}", value=time(12,0))
-            mtime_str = med_t.strftime("%H:%M")
-            hrs_bf = hours_before_bed(mtime_str, bed_str)
-            st.markdown(f'<div class="info-box">⏱ {med_name} — {dose_val} taken <strong>{hrs_bf:.1f} hrs</strong> before bed</div>', unsafe_allow_html=True)
-            med_rows.append({"name":med_name,"dose":dose_val,"time":mtime_str,"hrs":hrs_bf})
+            # How many doses today?
+            num_doses = st.number_input(f"How many doses of {med_name}?",
+                                         1, 4, 1, step=1, key=f"ndoses_{med_name}")
+            for d in range(int(num_doses)):
+                label = f"Dose {d+1}" if num_doses > 1 else "Dose"
+                c1, c2 = st.columns(2)
+                with c1:
+                    dose_val = st.text_input(f"{label} amount",
+                                              value=f"{default_dose}{unit}",
+                                              key=f"dose_{med_name}_{d}")
+                with c2:
+                    med_t = st.time_input(f"{label} time taken",
+                                           key=f"time_{med_name}_{d}",
+                                           value=time(12,0))
+                mtime_str = med_t.strftime("%H:%M")
+                hrs_bf = hours_before_bed(mtime_str, bed_str)
+                st.markdown(f'<div class="info-box">⏱ {med_name} {label} — {dose_val} taken <strong>{hrs_bf:.1f} hrs</strong> before bed</div>', unsafe_allow_html=True)
+                med_rows.append({"name": f"{med_name} (dose {d+1})" if num_doses > 1 else med_name,
+                                  "dose": dose_val, "time": mtime_str, "hrs": hrs_bf})
 
     # Custom medications
     st.markdown("**➕ Add custom medication**")
     num_custom = st.number_input("How many custom meds to add?", 0, 5, 0, step=1)
     for i in range(int(num_custom)):
-        c1,c2,c3 = st.columns([2,1,1])
+        c1, c2, c3 = st.columns([2,1,1])
         with c1: cname = st.text_input(f"Custom Med {i+1} name", key=f"cname{i}")
         with c2: cdose = st.text_input("Dose", key=f"cdose{i}", placeholder="e.g. 10mg")
         with c3: ctime = st.time_input("Time", key=f"ctime{i}", value=time(12,0))
@@ -299,7 +311,7 @@ with tab_log:
             ctime_str = ctime.strftime("%H:%M")
             hrs_bf = hours_before_bed(ctime_str, bed_str)
             st.markdown(f'<div class="info-box">⏱ {cname} — {cdose} taken <strong>{hrs_bf:.1f} hrs</strong> before bed</div>', unsafe_allow_html=True)
-            med_rows.append({"name":cname,"dose":cdose,"time":ctime_str,"hrs":hrs_bf})
+            med_rows.append({"name": cname, "dose": cdose, "time": ctime_str, "hrs": hrs_bf})
 
     # Pad to at least 3 slots for sheet compatibility
     while len(med_rows) < 3:
@@ -320,9 +332,9 @@ with tab_log:
             "all_meds": str([{"name":m["name"],"dose":m["dose"],"time":m["time"],"hrs":m["hrs"]} for m in med_rows if m["name"]]),
             "exercise":int(exercised),"exercise_intensity":ex_intensity,
             "exercise_hrs_before_bed":ex_hrs_before,
-            "alcohol_drinks":alcohol,"alcohol_hrs_before_bed":alc_hrs,
             "stress_level":stress,"worked_past_9pm":int(worked_late),
-            "screen_time_before_bed_min":screen_min,"events":events,"notes":notes
+            "sleep_location":sleep_location,"slept_with":slept_with,
+            "events":events,"notes":notes
         }
         if gsheet_ready and not use_demo:
             if append_row(client, sheet_name_input, row):
@@ -340,8 +352,8 @@ with tab_data:
         st.info("No data yet.")
     else:
         show_cols = [c for c in ["date","sleep_duration_hr","sleep_score","nap_minutes",
-            "med1_name","med1_hrs_before_bed","exercise","alcohol_drinks",
-            "stress_level","worked_past_9pm","screen_time_before_bed_min","events"]
+            "med1_name","med1_hrs_before_bed","exercise",
+            "stress_level","worked_past_9pm","sleep_location","slept_with","events"]
             if c in df.columns]
         st.dataframe(df[show_cols].sort_values("date",ascending=False), use_container_width=True)
 
@@ -366,15 +378,23 @@ with tab_corr:
         target = st.selectbox("Outcome", ["sleep_score","sleep_duration_hr"],
             format_func=lambda x: {"sleep_score":"Sleep Score","sleep_duration_hr":"Sleep Duration"}[x])
 
+        # Create binary columns for location/partner for correlation
+        if "sleep_location" in df.columns:
+            df["sleep_location_home"]      = (df["sleep_location"] == "Home").astype(int)
+            df["sleep_location_elizabeth"] = (df["sleep_location"] == "Elizabeth's").astype(int)
+        if "slept_with" in df.columns:
+            df["slept_alone"] = (df["slept_with"] == "Alone").astype(int)
+
         factor_labels = {
             "med1_hrs_before_bed":"Med 1 — hrs before bed",
             "med2_hrs_before_bed":"Med 2 — hrs before bed",
             "med3_hrs_before_bed":"Med 3 — hrs before bed",
             "exercise":"Exercised (0/1)",
-            "alcohol_drinks":"Alcohol (drinks)",
             "stress_level":"Stress Level",
             "worked_past_9pm":"Worked Past 9 PM",
-            "screen_time_before_bed_min":"Screen Time (min)",
+            "sleep_location_home":"Slept at Home (0/1)",
+            "sleep_location_elizabeth":"Slept at Elizabeth's (0/1)",
+            "slept_alone":"Slept Alone (0/1)",
             "nap_minutes":"Nap Duration (min)"
         }
 
