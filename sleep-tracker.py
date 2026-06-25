@@ -72,7 +72,7 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
           "https://www.googleapis.com/auth/drive"]
 
 COLUMNS = [
-    "date","bedtime","wake_time","sleep_duration_hr","sleep_score","nap_minutes",
+    "date","bedtime","wake_time","sleep_duration_hr","sleep_score",
     "med1_name","med1_dose","med1_time","med1_hrs_before_bed",
     "med2_name","med2_dose","med2_time","med2_hrs_before_bed",
     "med3_name","med3_dose","med3_time","med3_hrs_before_bed",
@@ -140,23 +140,24 @@ def to_12hr(t_str):
     except: return t_str
 
 def time_picker(label, key, default_hour=12, default_minute=0, default_period="PM"):
-    """12hr time picker using dropdowns. Returns HH:MM string in 24hr format."""
+    """12hr time picker using dropdowns on one line. Returns HH:MM in 24hr format."""
     hours   = [str(h) for h in range(1, 13)]
     minutes = ["00","05","10","15","20","25","30","35","40","45","50","55"]
     periods = ["AM","PM"]
-    c1, c2, c3 = st.columns([2,2,2])
+    if label:
+        st.markdown(f"**{label}**")
+    c1, c2, c3 = st.columns([3,3,2])
     with c1:
-        hr = st.selectbox("Hour", hours, index=hours.index(str(default_hour)),
-                          key=f"{key}_hr", label_visibility="collapsed")
+        hr = st.selectbox("Hr", hours, index=hours.index(str(default_hour)),
+                          key=f"{key}_hr", label_visibility="visible")
     with c2:
         mn = st.selectbox("Min", minutes,
                           index=minutes.index(f"{default_minute:02d}") if f"{default_minute:02d}" in minutes else 0,
-                          key=f"{key}_mn", label_visibility="collapsed")
+                          key=f"{key}_mn", label_visibility="visible")
     with c3:
         period = st.selectbox("AM/PM", periods,
                               index=periods.index(default_period),
-                              key=f"{key}_ampm", label_visibility="collapsed")
-    # Convert to 24hr
+                              key=f"{key}_ampm", label_visibility="visible")
     h24 = int(hr) % 12 + (12 if period == "PM" else 0)
     return f"{h24:02d}:{mn}"
 
@@ -240,7 +241,6 @@ with st.sidebar:
             "date": demo_dates,
             "sleep_duration_hr": sleep_dur.round(2),
             "sleep_score": sleep_score.round(1),
-            "nap_minutes": np.random.choice([0,0,0,20,30,45], n),
             "med1_name": "Adderall",
             "med1_hrs_before_bed": hrs_before.round(2),
             "exercise": exercise,
@@ -267,24 +267,30 @@ with tab_log:
         log_date = st.date_input("Sleep Date", value=date.today())
         st.markdown('<div class="info-box">📅 Sleep date is the date your day <strong>started</strong> (5:00 AM). Times between 12:00 AM–4:59 AM automatically belong to this log entry.</div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
-        st.markdown("**Bedtime**")
         bed_str = time_picker("Bedtime", key="bedtime", default_hour=11, default_minute=0, default_period="PM")
         wake_str = ""
         st.markdown(f'<div class="info-box">Bedtime: <strong>{to_12hr(bed_str)}</strong></div>', unsafe_allow_html=True)
-        sleep_dur = st.number_input("Sleep duration (hrs)", value=7.0,
-                                     min_value=0.0, max_value=24.0, step=0.25)
-        sleep_score_val = st.number_input("Sleep score (0–100)", 0, 100, 75, step=1)
-        nap_min = st.number_input("Nap today (min)", 0, 300, 0, step=5)
+        c1, c2 = st.columns(2)
+        with c1:
+            sleep_dur = st.number_input("Duration (hrs)", value=7.0, min_value=0.0, max_value=24.0, step=0.25)
+        with c2:
+            sleep_score_val = st.number_input("Sleep Score", 0, 100, 75, step=1)
 
     with col_b:
         st.markdown('<div class="section-header">Lifestyle</div>', unsafe_allow_html=True)
         exercised = st.checkbox("Exercised today")
         ex_intensity, ex_hrs_before = "", np.nan
         if exercised:
-            ex_intensity = st.selectbox("Intensity", ["Light","Moderate","Intense"], index=1)
-            ex_hrs_before = st.number_input("Hrs before bed", 0.0, 24.0, 4.0, 0.5, key="ex")
-        stress = st.number_input("Stress level (1–10)", 1, 10, 5, step=1)
-        worked_late = st.checkbox("Worked past 9 PM")
+            c1, c2 = st.columns(2)
+            with c1:
+                ex_intensity = st.selectbox("Intensity", ["Light","Moderate","Intense"], index=1)
+            with c2:
+                ex_hrs_before = st.number_input("Hrs before bed", 0.0, 24.0, 4.0, 0.5, key="ex")
+        c1, c2 = st.columns(2)
+        with c1:
+            stress = st.number_input("Stress (1–10)", 1, 10, 5, step=1)
+        with c2:
+            worked_late = st.checkbox("Worked past 9 PM")
 
         st.markdown("**Where did you sleep?**")
         sleep_location = st.radio("Location", ["Home","Elizabeth's","Hotel"], horizontal=True,
@@ -331,7 +337,7 @@ with tab_log:
                                               value=f"{default_dose}{unit}",
                                               key=f"dose_{med_name}_{d}")
                 st.markdown(f"**{label} time taken**")
-                mtime_str = time_picker(f"{label} time", key=f"time_{med_name}_{d}",
+                mtime_str = time_picker("", key=f"time_{med_name}_{d}",
                                         default_hour=12, default_minute=0, default_period="PM")
                 hrs_bf = hours_before_bed(mtime_str, bed_str)
                 st.markdown(f'<div class="info-box">⏱ {med_name} {label} — {dose_val} at <strong>{to_12hr(mtime_str)}</strong> ({hrs_bf:.1f} hrs before bed)</div>', unsafe_allow_html=True)
@@ -361,7 +367,7 @@ with tab_log:
     if st.button("💾 Save Entry"):
         row = {
             "date":str(log_date),"bedtime":bed_str,"wake_time":wake_str,
-            "sleep_duration_hr":sleep_dur,"sleep_score":sleep_score_val,"nap_minutes":nap_min,
+            "sleep_duration_hr":sleep_dur,"sleep_score":sleep_score_val,
             "med1_name":med_rows[0]["name"],"med1_dose":med_rows[0]["dose"],
             "med1_time":med_rows[0]["time"],"med1_hrs_before_bed":med_rows[0]["hrs"],
             "med2_name":med_rows[1]["name"],"med2_dose":med_rows[1]["dose"],
@@ -435,7 +441,6 @@ with tab_corr:
             "sleep_location_home":"Slept at Home (0/1)",
             "sleep_location_elizabeth":"Slept at Elizabeth's (0/1)",
             "slept_alone":"Slept Alone (0/1)",
-            "nap_minutes":"Nap Duration (min)"
         }
 
         results = []
