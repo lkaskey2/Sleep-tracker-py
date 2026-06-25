@@ -278,7 +278,11 @@ with tab_log:
 
     with col_b:
         st.markdown('<div class="section-header">Lifestyle</div>', unsafe_allow_html=True)
-        exercised = st.checkbox("Exercised today")
+        c1, c2 = st.columns(2)
+        with c1:
+            exercised = st.checkbox("Exercised today")
+        with c2:
+            stress = st.number_input("Stress (1–10)", 1, 10, 5, step=1)
         ex_intensity, ex_hrs_before = "", np.nan
         if exercised:
             c1, c2 = st.columns(2)
@@ -286,11 +290,7 @@ with tab_log:
                 ex_intensity = st.selectbox("Intensity", ["Light","Moderate","Intense"], index=1)
             with c2:
                 ex_hrs_before = st.number_input("Hrs before bed", 0.0, 24.0, 4.0, 0.5, key="ex")
-        c1, c2 = st.columns(2)
-        with c1:
-            stress = st.number_input("Stress (1–10)", 1, 10, 5, step=1)
-        with c2:
-            worked_late = st.checkbox("Worked past 9 PM")
+        worked_late = st.checkbox("Worked past 9 PM")
 
         st.markdown("**Where did you sleep?**")
         sleep_location = st.radio("Location", ["Home","Elizabeth's","Hotel"], horizontal=True,
