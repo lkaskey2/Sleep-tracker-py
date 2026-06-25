@@ -130,6 +130,16 @@ def time_to_float(t_str):
         return h + m/60
     except: return np.nan
 
+def to_12hr(t_str):
+    """Convert HH:MM (24hr) to 12hr display string."""
+    try:
+        h, m = map(int, t_str.split(":"))
+        period = "AM" if h < 12 else "PM"
+        h12 = h % 12
+        if h12 == 0: h12 = 12
+        return f"{h12}:{m:02d} {period}"
+    except: return t_str
+
 def hours_before_bed(med_time_str, bedtime_str):
     try:
         diff = time_to_float(bedtime_str) - time_to_float(med_time_str)
@@ -227,9 +237,10 @@ with tab_log:
         st.markdown('<div class="section-header">Sleep</div>', unsafe_allow_html=True)
         log_date = st.date_input("Date", value=date.today())
         c1, c2 = st.columns(2)
-        with c1: bedtime = st.time_input("Bedtime", value=time(23,0))
-        bed_str  = bedtime.strftime("%H:%M")
+        with c1: bedtime = st.time_input("Bedtime (use AM/PM)", value=time(23,0))
+        bed_str = bedtime.strftime("%H:%M")
         wake_str = ""
+        st.markdown(f'<div class="info-box">Bedtime: <strong>{to_12hr(bed_str)}</strong></div>', unsafe_allow_html=True)
         sleep_dur = st.number_input("Sleep duration (hrs)", value=7.0,
                                      min_value=0.0, max_value=24.0, step=0.25)
         sleep_score_val = st.number_input("Sleep score (0–100)", 0, 100, 75, step=1)
@@ -295,7 +306,7 @@ with tab_log:
                                            value=time(12,0))
                 mtime_str = med_t.strftime("%H:%M")
                 hrs_bf = hours_before_bed(mtime_str, bed_str)
-                st.markdown(f'<div class="info-box">⏱ {med_name} {label} — {dose_val} taken <strong>{hrs_bf:.1f} hrs</strong> before bed</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="info-box">⏱ {med_name} {label} — {dose_val} at <strong>{to_12hr(mtime_str)}</strong> ({hrs_bf:.1f} hrs before bed)</div>', unsafe_allow_html=True)
                 med_rows.append({"name": f"{med_name} (dose {d+1})" if num_doses > 1 else med_name,
                                   "dose": dose_val, "time": mtime_str, "hrs": hrs_bf})
 
@@ -310,7 +321,7 @@ with tab_log:
         if cname.strip():
             ctime_str = ctime.strftime("%H:%M")
             hrs_bf = hours_before_bed(ctime_str, bed_str)
-            st.markdown(f'<div class="info-box">⏱ {cname} — {cdose} taken <strong>{hrs_bf:.1f} hrs</strong> before bed</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="info-box">⏱ {cname} — {cdose} at <strong>{to_12hr(ctime_str)}</strong> ({hrs_bf:.1f} hrs before bed)</div>', unsafe_allow_html=True)
             med_rows.append({"name": cname, "dose": cdose, "time": ctime_str, "hrs": hrs_bf})
 
     # Pad to at least 3 slots for sheet compatibility
