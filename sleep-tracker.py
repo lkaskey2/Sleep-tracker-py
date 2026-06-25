@@ -228,13 +228,11 @@ with tab_log:
         log_date = st.date_input("Date", value=date.today())
         c1, c2 = st.columns(2)
         with c1: bedtime = st.time_input("Bedtime", value=time(23,0))
-        with c2: wake_time = st.time_input("Wake time", value=time(7,0))
         bed_str  = bedtime.strftime("%H:%M")
-        wake_str = wake_time.strftime("%H:%M")
-        auto_dur = calc_duration(bed_str, wake_str)
-        sleep_dur = st.number_input("Sleep duration (hrs)", value=auto_dur,
+        wake_str = ""
+        sleep_dur = st.number_input("Sleep duration (hrs)", value=7.0,
                                      min_value=0.0, max_value=24.0, step=0.25)
-        sleep_score_val = st.slider("Sleep score", 0, 100, 75)
+        sleep_score_val = st.number_input("Sleep score (0–100)", 0, 100, 75, step=1)
         nap_min = st.number_input("Nap today (min)", 0, 300, 0, step=5)
 
     with col_b:
@@ -242,34 +240,70 @@ with tab_log:
         exercised = st.checkbox("Exercised today")
         ex_intensity, ex_hrs_before = "", np.nan
         if exercised:
-            ex_intensity = st.select_slider("Intensity", ["Light","Moderate","Intense"], "Moderate")
+            ex_intensity = st.selectbox("Intensity", ["Light","Moderate","Intense"], index=1)
             ex_hrs_before = st.number_input("Hrs before bed", 0.0, 24.0, 4.0, 0.5, key="ex")
         alcohol = st.number_input("Alcoholic drinks", 0, 20, 0)
         alc_hrs = np.nan
         if alcohol > 0:
             alc_hrs = st.number_input("Last drink (hrs before bed)", 0.0, 24.0, 3.0, 0.5)
-        stress = st.slider("Stress level (1–10)", 1, 10, 5)
+        stress = st.number_input("Stress level (1–10)", 1, 10, 5, step=1)
         worked_late = st.checkbox("Worked past 9 PM")
         screen_min = st.number_input("Screen time before bed (min)", 0, 300, 30, 5)
         events = st.text_input("One-off events (travel, illness…)")
         notes  = st.text_area("Notes", height=60)
 
     st.markdown('<div class="section-header">Medications / Supplements</div>', unsafe_allow_html=True)
-    st.markdown('<div class="info-box">Enter the time each medication was taken. Hours before bed is calculated automatically.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="info-box">Check each medication taken tonight. Adjust dose and time as needed. Add custom meds at the bottom.</div>', unsafe_allow_html=True)
+
+    # Pre-defined medication list (display name, default dose, unit)
+    PRESET_MEDS = [
+        ("Vitamin A",         "20",   "mg"),
+        ("Vitamin K",         "100",  "mg"),
+        ("Unisom",            "50",   "mg"),
+        ("Vitamin B12",       "1000", "mcg"),
+        ("Magnesium",         "400",  "mg"),
+        ("Magnesium Glyconate","400", "mg"),
+        ("Magnesium Threonate","2000","mg"),
+        ("Vitamin C",         "500",  "mg"),
+        ("L-Arginine",        "3000", "mg"),
+        ("L-Carnitine",       "1800", "mg"),
+        ("Vitamin T",         "50",   "mg"),
+        ("Vitamin G",         "600",  "mg"),
+    ]
 
     med_rows = []
-    for i in range(1,4):
-        c1,c2,c3 = st.columns([2,1,1])
-        with c1: mname = st.text_input(f"Med {i}", key=f"mn{i}", placeholder="e.g. Adderall")
-        with c2: mdose = st.text_input("Dose", key=f"md{i}", placeholder="20mg")
-        with c3: mtime = st.time_input("Time taken", key=f"mt{i}", value=time(12,0))
-        if mname.strip():
-            mtime_str = mtime.strftime("%H:%M")
+    for med_name, default_dose, unit in PRESET_MEDS:
+        col_chk, col_dose, col_time = st.columns([2,1,1])
+        with col_chk:
+            took = st.checkbox(med_name, key=f"chk_{med_name}")
+        if took:
+            with col_dose:
+                dose_val = st.text_input("Dose", value=f"{default_dose}{unit}",
+                                          key=f"dose_{med_name}")
+            with col_time:
+                med_t = st.time_input("Time", key=f"time_{med_name}", value=time(12,0))
+            mtime_str = med_t.strftime("%H:%M")
             hrs_bf = hours_before_bed(mtime_str, bed_str)
-            st.markdown(f'<div class="info-box">⏱ {mname} taken <strong>{hrs_bf:.1f} hrs</strong> before bed</div>', unsafe_allow_html=True)
-            med_rows.append({"name":mname,"dose":mdose,"time":mtime_str,"hrs":hrs_bf})
-        else:
-            med_rows.append({"name":"","dose":"","time":"","hrs":np.nan})
+            st.markdown(f'<div class="info-box">⏱ {med_name} — {dose_val} taken <strong>{hrs_bf:.1f} hrs</strong> before bed</div>', unsafe_allow_html=True)
+            med_rows.append({"name":med_name,"dose":dose_val,"time":mtime_str,"hrs":hrs_bf})
+
+    # Custom medications
+    st.markdown("**➕ Add custom medication**")
+    num_custom = st.number_input("How many custom meds to add?", 0, 5, 0, step=1)
+    for i in range(int(num_custom)):
+        c1,c2,c3 = st.columns([2,1,1])
+        with c1: cname = st.text_input(f"Custom Med {i+1} name", key=f"cname{i}")
+        with c2: cdose = st.text_input("Dose", key=f"cdose{i}", placeholder="e.g. 10mg")
+        with c3: ctime = st.time_input("Time", key=f"ctime{i}", value=time(12,0))
+        if cname.strip():
+            ctime_str = ctime.strftime("%H:%M")
+            hrs_bf = hours_before_bed(ctime_str, bed_str)
+            st.markdown(f'<div class="info-box">⏱ {cname} — {cdose} taken <strong>{hrs_bf:.1f} hrs</strong> before bed</div>', unsafe_allow_html=True)
+            med_rows.append({"name":cname,"dose":cdose,"time":ctime_str,"hrs":hrs_bf})
+
+    # Pad to at least 3 slots for sheet compatibility
+    while len(med_rows) < 3:
+        med_rows.append({"name":"","dose":"","time":"","hrs":np.nan})
 
     st.markdown("---")
     if st.button("💾 Save Entry"):
@@ -282,6 +316,8 @@ with tab_log:
             "med2_time":med_rows[1]["time"],"med2_hrs_before_bed":med_rows[1]["hrs"],
             "med3_name":med_rows[2]["name"],"med3_dose":med_rows[2]["dose"],
             "med3_time":med_rows[2]["time"],"med3_hrs_before_bed":med_rows[2]["hrs"],
+            # Store all meds as JSON string for full fidelity
+            "all_meds": str([{"name":m["name"],"dose":m["dose"],"time":m["time"],"hrs":m["hrs"]} for m in med_rows if m["name"]]),
             "exercise":int(exercised),"exercise_intensity":ex_intensity,
             "exercise_hrs_before_bed":ex_hrs_before,
             "alcohol_drinks":alcohol,"alcohol_hrs_before_bed":alc_hrs,
@@ -458,7 +494,7 @@ with tab_med:
                          "Hours Between Dose & Bedtime", "Sleep Score")
 
                 # Early vs late bar
-                threshold = st.slider("Early = taken more than X hrs before bed", 4.0, 12.0, 8.0, 0.5)
+                threshold = st.number_input("Early = taken more than X hrs before bed", 1.0, 20.0, 8.0, step=0.5)
                 sub2 = sub.copy()
                 sub2["timing"] = np.where(sub2[hrs_col]>=threshold, "Early", "Late")
                 grouped = sub2.groupby("timing")["sleep_score"].mean()
