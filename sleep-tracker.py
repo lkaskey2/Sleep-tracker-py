@@ -160,9 +160,18 @@ def time_picker(label, key, default_hour=12, default_minute=0, default_period="P
     h24 = int(hr) % 12 + (12 if period == "PM" else 0)
     return f"{h24:02d}:{mn}"
 
+def adjust_for_sleep_day(t_float):
+    """Times between 0:00 and 4:59 AM belong to the next calendar day.
+    Shift them to after midnight by adding 24 so ordering is correct."""
+    if 0 <= t_float < 5:
+        return t_float + 24
+    return t_float
+
 def hours_before_bed(med_time_str, bedtime_str):
     try:
-        diff = time_to_float(bedtime_str) - time_to_float(med_time_str)
+        med_f  = adjust_for_sleep_day(time_to_float(med_time_str))
+        bed_f  = adjust_for_sleep_day(time_to_float(bedtime_str))
+        diff = bed_f - med_f
         if diff < 0: diff += 24
         return round(diff, 2)
     except: return np.nan
@@ -255,7 +264,8 @@ with tab_log:
 
     with col_a:
         st.markdown('<div class="section-header">Sleep</div>', unsafe_allow_html=True)
-        log_date = st.date_input("Date", value=date.today())
+        log_date = st.date_input("Sleep Date", value=date.today())
+        st.markdown('<div class="info-box">📅 Sleep date is the date your day <strong>started</strong> (5:00 AM). Times between 12:00 AM–4:59 AM automatically belong to this log entry.</div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         st.markdown("**Bedtime**")
         bed_str = time_picker("Bedtime", key="bedtime", default_hour=11, default_minute=0, default_period="PM")
