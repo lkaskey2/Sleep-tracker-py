@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🌙 Sleep Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23000000'/><circle cx='50' cy='50' r='38' fill='%23D0D0D0'/><circle cx='50' cy='50' r='36' fill='%23C8C8C8'/><circle cx='38' cy='35' r='6' fill='%23A0A0A0' opacity='0.5'/><circle cx='62' cy='45' r='4' fill='%23A0A0A0' opacity='0.4'/><circle cx='45' cy='62' r='5' fill='%23A0A0A0' opacity='0.45'/><circle cx='65' cy='63' r='3' fill='%23A0A0A0' opacity='0.35'/><circle cx='30' cy='55' r='3' fill='%23A0A0A0' opacity='0.3'/><radialGradient id='g' cx='35%25' cy='30%25' r='60%25'><stop offset='0' stop-color='%23FFFFFF' stop-opacity='0.7'/><stop offset='1' stop-color='%23888888' stop-opacity='0'/></radialGradient><circle cx='50' cy='50' r='36' fill='url(%23g)'/></svg>"><rect width='100' height='100' fill='%23000000'/><circle cx='50' cy='50' r='38' fill='%23FFD700'/><circle cx='50' cy='50' r='36' fill='%23FFC200'/><circle cx='38' cy='35' r='6' fill='%23E8A800' opacity='0.5'/><circle cx='62' cy='45' r='4' fill='%23E8A800' opacity='0.4'/><circle cx='45' cy='62' r='5' fill='%23E8A800' opacity='0.45'/><circle cx='65' cy='63' r='3' fill='%23E8A800' opacity='0.35'/><circle cx='30' cy='55' r='3' fill='%23E8A800' opacity='0.3'/><radialGradient id='g' cx='40%25' cy='35%25' r='60%25'><stop offset='0' stop-color='%23FFF5C0' stop-opacity='0.6'/><stop offset='1' stop-color='%23CC9000' stop-opacity='0'/></radialGradient><circle cx='50' cy='50' r='36' fill='url(%23g)'/></svg>"><text y=%27.9em%27 font-size=%2790%27>🌙</text></svg>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sleep Tracker">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d1117;color:#e6edf3;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;font-size:18px}
+a{color:#58a6ff}
+
+/* NAV */
+.nav{background:#161b22;border-bottom:1px solid #21262d;display:flex;align-items:center;overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:100;padding:0 12px}
+.nav::-webkit-scrollbar{display:none}
+.nav-brand{font-size:17px;font-weight:700;padding:13px 12px 13px 0;border-right:1px solid #21262d;margin-right:6px;white-space:nowrap;flex-shrink:0}
+.nav-tab{padding:13px 12px;font-size:15px;font-weight:600;color:#58a6ff;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;flex-shrink:0}
+.nav-tab.active{color:#58a6ff;border-bottom-color:#58a6ff}
+.nav-gear{margin-left:auto;padding:13px 8px;cursor:pointer;font-size:16px;flex-shrink:0}
+
+/* PAGES */
+.page{display:none;padding:16px 14px;max-width:860px;margin:0 auto}
+.page.active{display:block}
+
+/* CARDS */
+.card{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:14px;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#58a6ff;border-bottom:1px solid #21262d;padding-bottom:8px;margin-bottom:12px}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px}
+
+/* FORM */
+.flabel{display:block;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#58a6ff;margin-bottom:5px}
+input,select,textarea{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-family:inherit;font-size:16px;padding:9px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#58a6ff}
+select option{background:#161b22}
+
+/* CHECKBOX / RADIO */
+.crow{display:flex;align-items:center;gap:8px;font-size:16px;color:#e6edf3;cursor:pointer;margin-bottom:6px;user-select:none}
+.crow input{accent-color:#58a6ff;width:15px;height:15px;flex-shrink:0;cursor:pointer}
+.rgroup{display:flex;gap:12px;flex-wrap:wrap}
+.rgroup label{display:flex;align-items:center;gap:5px;font-size:16px;cursor:pointer}
+.rgroup input{accent-color:#58a6ff;width:14px;height:14px}
+
+/* BUTTONS */
+.btn-save{width:100%;padding:12px;background:#238636;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;margin-top:4px}
+.btn-save:hover{background:#2ea043}
+.btn-save:disabled{opacity:.6;cursor:not-allowed}
+
+/* INFO BOX */
+.ibox{background:#1c2128;border:1px solid #30363d;border-radius:6px;padding:8px 11px;font-size:13px;color:#8b949e;margin:6px 0}
+.ibox strong{color:#e6edf3}
+
+/* METRICS */
+.mrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.metric{background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:12px 14px}
+.mlabel{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#58a6ff;margin-bottom:4px}
+.mval{font-size:22px;font-weight:700;font-family:monospace;color:#58a6ff}
+.msub{font-size:14px;color:#58a6ff;margin-top:2px}
+
+/* ENTRIES */
+.entry{background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:11px 13px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.e-left{flex:1;min-width:0}
+.e-date{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#58a6ff;margin-bottom:2px}
+.e-main{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.e-meta{font-size:14px;color:#58a6ff;margin-top:3px}
+.e-score{font-size:22px;font-weight:700;font-family:monospace;color:#58a6ff;text-align:right}
+.e-slabel{font-size:13px;color:#58a6ff;text-align:right;text-transform:uppercase}
+
+/* CORR */
+.cbar{height:7px;border-radius:3px;background:#21262d;overflow:hidden;position:relative;margin:5px 0}
+.cfill{height:100%;border-radius:3px;position:absolute;top:0}
+.badge-sig{font-size:10px;padding:2px 6px;border-radius:10px;background:rgba(88,166,255,.15);color:#58a6ff;font-weight:600}
+
+/* EMPTY */
+.empty{text-align:center;padding:50px 20px;color:#58a6ff}
+.empty-icon{font-size:36px;margin-bottom:10px}
+
+/* SETTINGS PANEL */
+.settings-panel{background:#161b22;border-bottom:1px solid #21262d;padding:14px;display:none}
+.settings-panel.open{display:block}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;white-space:nowrap}
+
+/* MED DETAIL */
+.med-detail{padding-left:22px;margin-top:6px;border-left:2px solid #21262d}
+.see-more{font-size:15px;color:#58a6ff;cursor:pointer;padding:6px 0;display:inline-block}
+
+/* SECTION LABEL */
+.section-lbl{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#58a6ff;border-bottom:1px solid #21262d;padding-bottom:6px;margin:0 0 12px}
+
+@media(max-width:500px){
+  .g2{grid-template-columns:1fr}
+  .g4{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-brand">🌙 Sleep Tracker</div>
+  <div class="nav-tab active" onclick="showPage('log',this)">📝 Log</div>
+  <div class="nav-tab" onclick="showPage('data',this)">📊 Data</div>
+  <div class="nav-tab" onclick="showPage('corr',this)">🔗 Correlations</div>
+  <div class="nav-tab" onclick="showPage('med',this)">💊 Med Timing</div>
+  <div class="nav-gear" onclick="toggleSettings()">⚙️</div>
+</div>
+
+<div class="settings-panel" id="settings-panel">
+  <div class="card-title">Google Sheets Sync</div>
+  <div class="g2" style="margin-bottom:10px">
+    <div>
+      <label class="flabel">Spreadsheet ID</label>
+      <input type="text" id="gs-sheet-id" placeholder="From sheet URL" oninput="saveGS()">
+      <div style="font-size:13px;color:#58a6ff;margin-top:4px">From URL: /spreadsheets/d/<strong>ID</strong>/edit</div>
+    </div>
+    <div>
+      <label class="flabel">Access Token</label>
+      <input type="text" id="gs-token" placeholder="OAuth2 token" oninput="saveGS()">
+    </div>
+  </div>
+  <div id="sync-status" style="font-size:15px;color:#58a6ff"></div>
+  <div class="ibox" style="margin-top:8px">Data always saves locally. Google Sheets is a silent backup — you never need to open it.</div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ══ LOG PAGE ══ -->
+<div class="page active" id="page-log">
+  <div class="g2">
+    <div>
+      <div class="card">
+        <div style="margin-bottom:12px">
+          <label class="flabel">Sleep Date</label>
+          <input type="date" id="f-date">
+        </div>
+        <div class="ibox" style="margin-bottom:12px">📅 Sleep date = when your day <strong>started</strong> (5:00 AM). Times 12:00 AM–4:59 AM belong to this entry.</div>
+        <label class="flabel">Bedtime</label>
+        <div class="g3" style="margin-bottom:12px">
+          <div><label class="flabel">Hr</label><select id="f-hr"></select></div>
+          <div><label class="flabel">Min</label><select id="f-min"></select></div>
+          <div><label class="flabel">AM/PM</label><select id="f-ampm"><option>AM</option><option selected>PM</option></select></div>
+        </div>
+        <div class="g2">
+          <div><label class="flabel">Duration (hrs)</label><input type="number" id="f-duration" value="7" min="0" max="24" step="0.25"></div>
+          <div><label class="flabel">Sleep Score</label><input type="number" id="f-score" value="75" min="0" max="100"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="section-lbl" style="color:#58a6ff;font-size:18px">Lifestyle</div>
+        <div class="g2" style="margin-bottom:10px;align-items:center">
+          <label class="crow"><input type="checkbox" id="f-exercised"> Exercised today</label>
+          <div>
+            <div style="font-size:14px;color:#58a6ff;margin-bottom:5px">Stress</div>
+            <div style="display:flex;gap:10px">
+              <label class="crow" style="margin:0"><input type="radio" name="stress" value="Low"> <span style="color:#90ee90">Low</span></label>
+              <label class="crow" style="margin:0"><input type="radio" name="stress" value="Med" checked> <span style="color:#f0883e">Med</span></label>
+              <label class="crow" style="margin:0"><input type="radio" name="stress" value="High"> <span style="color:#f85149">High</span></label>
+            </div>
+          </div>
+        </div>
+        <div id="ex-detail" style="display:none;margin-bottom:10px">
+          <label class="flabel">Exercise Intensity</label>
+          <select id="f-ex-intensity"><option>Light</option><option selected>Moderate</option><option>Intense</option></select>
+        </div>
+        <label class="crow" style="margin-bottom:10px"><input type="checkbox" id="f-worked-late"> Worked past 9 PM</label>
+        <label class="crow" style="margin-bottom:10px"><input type="checkbox" id="f-high-burn"> Burned 3,000+ calories</label>
+        <div style="margin-bottom:10px">
+          <div style="font-size:14px;color:#58a6ff;margin-bottom:6px">Where did you sleep?</div>
+          <div class="rgroup">
+            <label><input type="radio" name="location" value="Home" checked> Home</label>
+            <label><input type="radio" name="location" value="Elizabeth's"> Elizabeth's</label>
+            <label><input type="radio" name="location" value="Hotel"> Hotel</label>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:14px;color:#58a6ff;margin-bottom:6px">Slept with?</div>
+          <div class="rgroup">
+            <label><input type="radio" name="slepton" value="Alone" checked> Alone</label>
+            <label><input type="radio" name="slepton" value="Elizabeth"> Elizabeth</label>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label class="flabel">One-off events</label>
+          <input type="text" id="f-events" placeholder="travel, illness…">
+        </div>
+        <div>
+          <label class="flabel">Notes</label>
+          <textarea id="f-notes" rows="2" style="resize:vertical"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEDS -->
+  <div class="card">
+    <div class="card-title">Medications / Supplements</div>
+    <div id="meds-visible"></div>
+    <span class="see-more" id="see-more-btn" onclick="toggleMoreMeds()">See more</span>
+    <div id="meds-hidden" style="display:none"></div>
+  </div>
+
+  <button class="btn-save" id="save-btn" onclick="saveEntry()">💾 Save Entry</button>
+</div>
+
+<!-- ══ DATA PAGE ══ -->
+<div class="page" id="page-data">
+  <div class="mrow" id="data-metrics"></div>
+  <div class="card">
+    <div class="card-title">Recent Entries</div>
+    <div id="entries-list"></div>
+  </div>
+</div>
+
+<!-- ══ CORR PAGE ══ -->
+<div class="page" id="page-corr">
+  <div style="margin-bottom:14px">
+    <label class="flabel">Outcome to analyze</label>
+    <select id="corr-target" onchange="renderCorr()" style="max-width:280px">
+      <option value="score">Sleep Score</option>
+      <option value="duration">Sleep Duration</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="card-title">Correlations</div>
+    <div id="corr-results"></div>
+  </div>
+  <div style="position:relative;width:100%;height:280px;margin-top:12px">
+    <canvas id="corr-chart" role="img" aria-label="Correlation bar chart"></canvas>
+  </div>
+</div>
+
+<!-- ══ MED TIMING PAGE ══ -->
+<div class="page" id="page-med">
+  <div style="margin-bottom:14px">
+    <label class="flabel">Medication</label>
+    <select id="med-select" onchange="renderMed()" style="max-width:280px"></select>
+  </div>
+  <div class="mrow" id="med-metrics"></div>
+  <div class="g2" id="med-early-late" style="margin-bottom:14px"></div>
+  <div style="position:relative;width:100%;height:260px">
+    <canvas id="med-chart" role="img" aria-label="Med timing scatter chart"></canvas>
+  </div>
+  <div class="ibox" style="margin-top:10px" id="med-info"></div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const PRESET_MEDS=[
+  {name:"Vitamin A",   dose:20,  unit:"mg"},
+  {name:"Vitamin K",   dose:100, unit:"mg"},
+  {name:"Unisom",      dose:50,  unit:"mg"},
+  {name:"Vitamin B12", dose:1000,unit:"mcg"},
+  {name:"Magnesium",   dose:400, unit:"mg"},
+  {name:"Magnesium Glyconate",dose:400,unit:"mg"},
+  {name:"Magnesium Threonate",dose:2000,unit:"mg"},
+  {name:"Vitamin C",   dose:500, unit:"mg"},
+  {name:"L-Arginine",  dose:3000,unit:"mg"},
+  {name:"L-Carnitine", dose:1800,unit:"mg"},
+  {name:"Vitamin T",   dose:50,  unit:"mg"},
+  {name:"Vitamin G",   dose:600, unit:"mg"},
+];
+
+const TIME_SLOTS=[
+  {label:"AM Early (12:00 AM - 4:59 AM)",mid:2.5},
+  {label:"AM (5:00 AM - 11:59 AM)",      mid:8.5},
+  {label:"PM Early (12:00 PM - 4:59 PM)",mid:14.5},
+  {label:"PM (5:00 PM - 11:59 PM)",      mid:20.5},
+];
+
+let entries=[];
+try{entries=JSON.parse(localStorage.getItem("sleep_v2")||"[]");}catch{}
+let gsConfig={sheetId:"",token:""};
+try{gsConfig=JSON.parse(localStorage.getItem("sleep_gs")||'{"sheetId":"","token":""}');}catch{}
+
+let corrChart=null,medChart=null;
+let showMoreMeds=false;
+const VISIBLE_COUNT=4;
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(function init(){
+  // Date
+  document.getElementById("f-date").value=today();
+
+  // Hr dropdown
+  const hrSel=document.getElementById("f-hr");
+  for(let h=1;h<=12;h++){const o=document.createElement("option");o.value=h;o.textContent=h;if(h===11)o.selected=true;hrSel.appendChild(o);}
+
+  // Min dropdown
+  const mnSel=document.getElementById("f-min");
+  ["00","05","10","15","20","25","30","35","40","45","50","55"].forEach(m=>{
+    const o=document.createElement("option");o.value=m;o.textContent=m;mnSel.appendChild(o);
+  });
+
+  // Exercise toggle
+  document.getElementById("f-exercised").addEventListener("change",function(){
+    document.getElementById("ex-detail").style.display=this.checked?"block":"none";
+  });
+
+  // Build med rows
+  buildMedRows();
+
+  // GS settings
+  document.getElementById("gs-sheet-id").value=gsConfig.sheetId||"";
+  document.getElementById("gs-token").value=gsConfig.token||"";
+})();
+
+function today(){return new Date().toISOString().split("T")[0];}
+
+// ── MEDS ──────────────────────────────────────────────────────────────────────
+function buildMedRows(){
+  const vis=document.getElementById("meds-visible");
+  const hid=document.getElementById("meds-hidden");
+  vis.innerHTML="";hid.innerHTML="";
+  PRESET_MEDS.forEach((med,idx)=>{
+    const el=buildMedRow(med);
+    if(idx<VISIBLE_COUNT)vis.appendChild(el);
+    else hid.appendChild(el);
+  });
+}
+
+function buildMedRow(med){
+  const half=med.dose*0.5,one5=med.dose*1.5,two=med.dose*2;
+  const doses=[half,med.dose,one5,two];
+  const key=med.name.replace(/\s+/g,"_");
+
+  const wrap=document.createElement("div");
+  wrap.style.marginBottom="10px";
+  wrap.innerHTML=`
+    <label class="crow">
+      <input type="checkbox" id="chk_${key}" onchange="toggleMedDetail('${key}')">
+      <strong>${med.name}</strong>
+    </label>
+    <div id="detail_${key}" class="med-detail" style="display:none">
+      <div style="font-size:15px;color:#58a6ff;margin-bottom:6px">Dose:</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        ${doses.map((d,i)=>`<label class="crow" style="margin:0">
+          <input type="radio" name="dose_${key}" value="${d}${med.unit}" ${i===1?"checked":""}>
+          <span style="font-size:16px">${d}${med.unit}</span>
+        </label>`).join("")}
+      </div>
+      <div style="font-size:15px;color:#58a6ff;margin-bottom:6px">When taken:</div>
+      <div class="g2">
+        ${TIME_SLOTS.map((slot,i)=>`<label class="crow" style="font-size:15px">
+          <input type="checkbox" id="slot_${key}_${i}" onchange="updateMedInfo('${key}','${med.name}')">
+          ${slot.label}
+        </label>`).join("")}
+      </div>
+      <div id="medinfo_${key}" class="ibox" style="display:none;font-size:15px"></div>
+    </div>
+  `;
+  return wrap;
+}
+
+function toggleMedDetail(key){
+  const checked=document.getElementById("chk_"+key).checked;
+  document.getElementById("detail_"+key).style.display=checked?"block":"none";
+}
+
+function updateMedInfo(key,name){
+  const bedHr=getBedFloat();
+  const anyChecked=TIME_SLOTS.some((_,i)=>document.getElementById("slot_"+key+"_"+i)?.checked);
+  const infoEl=document.getElementById("medinfo_"+key);
+  if(!anyChecked){infoEl.style.display="none";return;}
+  const dose=document.querySelector(`input[name="dose_${key}"]:checked`)?.value||"";
+  const lines=[];
+  TIME_SLOTS.forEach((slot,i)=>{
+    if(document.getElementById("slot_"+key+"_"+i)?.checked){
+      const hrs=hrsBeforeBed(slot.mid,bedHr);
+      lines.push(`⏱ ${name} — <strong>${dose}</strong> taken in the <strong>${slot.label}</strong> (${hrs} hrs before bed)`);
+    }
+  });
+  infoEl.innerHTML=lines.join("<br>");
+  infoEl.style.display="block";
+}
+
+function toggleMoreMeds(){
+  showMoreMeds=!showMoreMeds;
+  document.getElementById("meds-hidden").style.display=showMoreMeds?"block":"none";
+  document.getElementById("see-more-btn").textContent=showMoreMeds?"Show less":"See more";
+}
+
+function getMedRows(){
+  const rows=[];
+  PRESET_MEDS.forEach(med=>{
+    const key=med.name.replace(/\s+/g,"_");
+    if(!document.getElementById("chk_"+key)?.checked)return;
+    const dose=document.querySelector(`input[name="dose_${key}"]:checked`)?.value||"";
+    TIME_SLOTS.forEach((slot,i)=>{
+      if(document.getElementById("slot_"+key+"_"+i)?.checked){
+        const bedHr=getBedFloat();
+        rows.push({name:med.name,dose,slot:slot.label,hrs:hrsBeforeBed(slot.mid,bedHr)});
+      }
+    });
+  });
+  return rows;
+}
+
+// ── TIME HELPERS ──────────────────────────────────────────────────────────────
+function getBedFloat(){
+  const hr=parseInt(document.getElementById("f-hr").value)||11;
+  const mn=parseInt(document.getElementById("f-min").value)||0;
+  const pm=document.getElementById("f-ampm").value==="PM";
+  return(hr%12+(pm?12:0))+mn/60;
+}
+
+function adjustSD(h){return(h>=0&&h<5)?h+24:h;}
+
+function hrsBeforeBed(mid,bedH){
+  const m=adjustSD(mid),b=adjustSD(bedH);
+  let d=b-m;if(d<0)d+=24;
+  return Math.round(d*10)/10;
+}
+
+// ── SAVE ──────────────────────────────────────────────────────────────────────
+async function saveEntry(){
+  const btn=document.getElementById("save-btn");
+  btn.disabled=true;btn.textContent="Saving…";
+
+  const entry={
+    id:Date.now(),
+    date:document.getElementById("f-date").value,
+    bedtime:`${document.getElementById("f-hr").value}:${document.getElementById("f-min").value} ${document.getElementById("f-ampm").value}`,
+    bedFloat:getBedFloat(),
+    duration:parseFloat(document.getElementById("f-duration").value)||7,
+    score:parseInt(document.getElementById("f-score").value)||75,
+    exercised:document.getElementById("f-exercised").checked,
+    exIntensity:document.getElementById("f-ex-intensity").value,
+    stress:document.querySelector("input[name='stress']:checked")?.value||"Med",
+    workedLate:document.getElementById("f-worked-late").checked,
+    highBurn:document.getElementById("f-high-burn").checked,
+    location:document.querySelector("input[name='location']:checked")?.value||"Home",
+    sleptWith:document.querySelector("input[name='slepton']:checked")?.value||"Alone",
+    events:document.getElementById("f-events").value,
+    notes:document.getElementById("f-notes").value,
+    meds:getMedRows(),
+    ts:new Date().toISOString()
+  };
+
+  entries.push(entry);
+  localStorage.setItem("sleep_v2",JSON.stringify(entries));
+  showToast("✓ Entry saved");
+
+  // GS sync
+  if(gsConfig.sheetId&&gsConfig.token){
+    setSyncStatus("⟳ Syncing…","#58a6ff");
+    try{
+      const row=[entry.date,entry.bedtime,entry.duration,entry.score,
+        entry.exercised?1:0,entry.exIntensity,entry.stress,
+        entry.workedLate?1:0,entry.location,entry.sleptWith,
+        entry.events,entry.notes,JSON.stringify(entry.meds)];
+      const res=await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${gsConfig.sheetId}/values/Sheet1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+        {method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+gsConfig.token},
+         body:JSON.stringify({values:[row]})}
+      );
+      setSyncStatus(res.ok?"✓ Synced":"✕ Sync failed",res.ok?"#3fb950":"#f85149");
+    }catch{setSyncStatus("✕ Sync failed","#f85149");}
+    setTimeout(()=>setSyncStatus("",""),3000);
+  }
+
+  // Reset form
+  document.getElementById("f-date").value=today();
+  document.getElementById("f-events").value="";
+  document.getElementById("f-notes").value="";
+  document.getElementById("f-exercised").checked=false;
+  document.getElementById("ex-detail").style.display="none";
+  document.getElementById("f-worked-late").checked=false;
+  document.getElementById("f-high-burn").checked=false;
+  document.querySelector("input[name='stress'][value='Med']").checked=true;
+  document.querySelector("input[name='location'][value='Home']").checked=true;
+  document.querySelector("input[name='slepton'][value='Alone']").checked=true;
+  buildMedRows();
+  showMoreMeds=false;
+
+  btn.disabled=false;btn.textContent="💾 Save Entry";
+}
+
+// ── DATA PAGE ─────────────────────────────────────────────────────────────────
+function renderData(){
+  const el=document.getElementById("data-metrics");
+  const list=document.getElementById("entries-list");
+  if(!entries.length){
+    el.innerHTML="";
+    list.innerHTML=`<div class="empty"><div class="empty-icon">🌙</div>No entries yet. Log your first night!</div>`;
+    return;
+  }
+  const avg=arr=>arr.length?(arr.reduce((a,b)=>a+b)/arr.length).toFixed(1):0;
+  const avgScore=avg(entries.map(e=>e.score));
+  const avgDur=avg(entries.map(e=>e.duration));
+  const exPct=Math.round(entries.filter(e=>e.exercised).length/entries.length*100);
+  el.innerHTML=`
+    <div class="metric"><div class="mlabel">Avg Score</div><div class="mval">${avgScore}</div><div class="msub">/100</div></div>
+    <div class="metric"><div class="mlabel">Avg Duration</div><div class="mval">${avgDur}h</div><div class="msub">per night</div></div>
+    <div class="metric"><div class="mlabel">Nights Logged</div><div class="mval">${entries.length}</div><div class="msub">entries</div></div>
+    <div class="metric"><div class="mlabel">Exercise Days</div><div class="mval">${exPct}%</div><div class="msub">of nights</div></div>
+  `;
+  list.innerHTML=[...entries].reverse().map(e=>`
+    <div class="entry">
+      <div class="e-left">
+        <div class="e-date">${e.date}</div>
+        <div class="e-main">Bedtime ${e.bedtime} · ${e.duration}h sleep</div>
+        <div class="e-meta">${e.location} · ${e.sleptWith} · Stress ${e.stress}${e.exercised?" · Exercised":""}${e.workedLate?" · Worked late":""}${e.highBurn?" · 3000+ cal burn":""}${e.meds?.length?" · "+e.meds.length+" med(s)":""}</div>
+      </div>
+      <div><div class="e-score">${e.score}</div><div class="e-slabel">score</div></div>
+    </div>
+  `).join("");
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function pearsonR(xs,ys){
+  const n=xs.length;if(n<5)return{r:null,p:null};
+  const mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;
+  let num=0,vx=0,vy=0;
+  for(let i=0;i<n;i++){num+=(xs[i]-mx)*(ys[i]-my);vx+=(xs[i]-mx)**2;vy+=(ys[i]-my)**2;}
+  if(vx===0||vy===0)return{r:0,p:1};
+  const r=num/Math.sqrt(vx*vy);
+  const t=r*Math.sqrt((n-2)/(1-r*r+1e-10));
+  const p=Math.max(0,Math.min(1,2*(1-tApprox(Math.abs(t),n-2))));
+  return{r:Math.round(r*1000)/1000,p:Math.round(p*10000)/10000};
+}
+
+function tApprox(t,df){
+  const x=df/(df+t*t);
+  const a=0.5,b=df/2;
+  let ibeta=Math.pow(x,a)*Math.pow(1-x,b)/(a*betaFn(a,b));
+  return Math.max(0,Math.min(1,1-Math.min(ibeta,1)*0.5));
+}
+
+function betaFn(a,b){
+  return Math.exp(lgamma(a)+lgamma(b)-lgamma(a+b));
+}
+
+function lgamma(x){
+  const c=[76.18009172947146,-86.50532032941677,24.01409824083091,
+           -1.231739572450155,1.208650973866179e-3,-5.395239384953e-6];
+  let y=x,tmp=x+5.5;tmp-=(x+0.5)*Math.log(tmp);
+  let s=1.000000000190015;
+  for(let j=0;j<6;j++)s+=c[j]/++y;
+  return -tmp+Math.log(2.5066282746310005*s/x);
+}
+
+function corrStrength(r){
+  const a=Math.abs(r);
+  if(a>=0.7)return"Strong";if(a>=0.4)return"Moderate";if(a>=0.2)return"Weak";return"Negligible";
+}
+
+// ── CORRELATIONS ──────────────────────────────────────────────────────────────
+function getFactors(){
+  const factors=[
+    {label:"Exercised (0/1)",fn:e=>e.exercised?1:0},
+    {label:"Stress (Low=1,Med=2,High=3)",fn:e=>({Low:1,Med:2,High:3}[e.stress]||2)},
+    {label:"Worked Past 9 PM (0/1)",fn:e=>e.workedLate?1:0},
+    {label:"Burned 3000+ Calories (0/1)",fn:e=>e.highBurn?1:0},
+    {label:"Slept at Home (0/1)",fn:e=>e.location==="Home"?1:0},
+    {label:"Slept at Elizabeth's (0/1)",fn:e=>e.location==="Elizabeth's"?1:0},
+    {label:"Slept Alone (0/1)",fn:e=>e.sleptWith==="Alone"?1:0},
+  ];
+  const medNames=[...new Set(entries.flatMap(e=>(e.meds||[]).map(m=>m.name)))];
+  medNames.forEach(name=>{
+    factors.push({label:`${name} — hrs before bed`,fn:e=>{
+      const m=(e.meds||[]).find(x=>x.name===name);return m?parseFloat(m.hrs):null;
+    }});
+  });
+  return factors;
+}
+
+function renderCorr(){
+  const target=document.getElementById("corr-target").value;
+  const targetFn=target==="score"?e=>e.score:e=>e.duration;
+  const el=document.getElementById("corr-results");
+
+  if(entries.length<5){
+    el.innerHTML=`<div style="color:#58a6ff;font-size:13px">Need at least 5 nights of data.</div>`;
+    return;
+  }
+
+  const results=getFactors().map(f=>{
+    const pairs=entries.map(e=>({x:f.fn(e),y:targetFn(e)})).filter(p=>p.x!=null&&p.y!=null);
+    if(pairs.length<5)return null;
+    const{r,p}=pearsonR(pairs.map(p=>p.x),pairs.map(p=>p.y));
+    if(r==null)return null;
+    return{label:f.label,r,p,n:pairs.length};
+  }).filter(Boolean).sort((a,b)=>Math.abs(b.r)-Math.abs(a.r));
+
+  el.innerHTML=results.map(({label,r,p,n})=>`
+    <div class="corr-row">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:13px">${label}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${p<0.05?'<span class="badge-sig">sig</span>':""}
+          <span style="font-size:13px;font-weight:700;font-family:monospace;color:${r>0?"#3fb950":"#f85149"}">${r>0?"+":""}${r}</span>
+        </div>
+      </div>
+      <div class="cbar">
+        <div class="cfill" style="width:${Math.abs(r)*100}%;background:${r>0?"#3fb950":"#f85149"};${r<0?`left:${(1-Math.abs(r))*100}%`:"left:0"}"></div>
+      </div>
+      <div style="font-size:10px;color:#58a6ff">${corrStrength(r)} · p=${p} · n=${n}</div>
+    </div>
+  `).join("")||`<div style="color:#58a6ff;font-size:13px">Not enough variation for correlations yet.</div>`;
+
+  // Chart
+  if(corrChart){corrChart.destroy();corrChart=null;}
+  if(results.length){
+    corrChart=new Chart(document.getElementById("corr-chart"),{
+      type:"bar",
+      data:{
+        labels:results.map(r=>r.label),
+        datasets:[{data:results.map(r=>r.r),
+          backgroundColor:results.map(r=>r.r>0?"rgba(63,185,80,0.7)":"rgba(248,81,73,0.7)"),
+          borderColor:results.map(r=>r.r>0?"#3fb950":"#f85149"),
+          borderWidth:1,borderRadius:4}]
+      },
+      options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{x:{min:-0.8,max:0.8,grid:{color:"rgba(255,255,255,0.06)"},ticks:{color:"#7d8590",font:{size:10}}},
+                y:{grid:{display:false},ticks:{color:"#e6edf3",font:{size:10}}}}}
+    });
+  }
+}
+
+// ── MED TIMING ────────────────────────────────────────────────────────────────
+function renderMedSelect(){
+  const sel=document.getElementById("med-select");
+  const names=[...new Set(entries.flatMap(e=>(e.meds||[]).map(m=>m.name)))];
+  sel.innerHTML=names.map(n=>`<option>${n}</option>`).join("");
+  if(names.length)renderMed();
+}
+
+function renderMed(){
+  const name=document.getElementById("med-select").value;
+  if(!name)return;
+
+  const data=entries.map(e=>{
+    const m=(e.meds||[]).find(x=>x.name===name);
+    if(!m)return null;
+    return{hrs:parseFloat(m.hrs),score:e.score,dur:e.duration};
+  }).filter(Boolean);
+
+  const mEl=document.getElementById("med-metrics");
+  if(data.length<3){mEl.innerHTML=`<div style="color:#58a6ff;font-size:13px">Not enough data for ${name} yet.</div>`;return;}
+
+  const avgH=(data.reduce((a,b)=>a+b.hrs,0)/data.length).toFixed(1);
+  const{r,p}=pearsonR(data.map(d=>d.hrs),data.map(d=>d.score));
+
+  mEl.innerHTML=`
+    <div class="metric"><div class="mlabel">Avg Hrs Before Bed</div><div class="mval">${avgH}h</div><div class="msub">${data.length} nights</div></div>
+    ${r!=null?`<div class="metric"><div class="mlabel">r vs Sleep Score</div><div class="mval" style="color:${r>0?"#3fb950":"#f85149"}">${r>0?"+":""}${r}</div><div class="msub">${corrStrength(r)} · ${p<0.05?"✓ sig":"not sig"}</div></div>`:""}
+  `;
+
+  const threshold=8;
+  const early=data.filter(d=>d.hrs>=threshold);
+  const late=data.filter(d=>d.hrs<threshold);
+  const avgE=early.length?(early.reduce((a,b)=>a+b.score,0)/early.length).toFixed(1):null;
+  const avgL=late.length?(late.reduce((a,b)=>a+b.score,0)/late.length).toFixed(1):null;
+
+  document.getElementById("med-early-late").innerHTML=`
+    <div style="background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:14px;text-align:center">
+      <div style="font-size:14px;color:#58a6ff;margin-bottom:6px">Early (≥${threshold}h before bed)</div>
+      <div style="font-size:26px;font-weight:700;font-family:monospace;color:#3fb950">${avgE||"—"}</div>
+      <div style="font-size:11px;color:#58a6ff;margin-top:4px">avg score · n=${early.length}</div>
+    </div>
+    <div style="background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:14px;text-align:center">
+      <div style="font-size:14px;color:#58a6ff;margin-bottom:6px">Late (&lt;${threshold}h before bed)</div>
+      <div style="font-size:26px;font-weight:700;font-family:monospace;color:#f85149">${avgL||"—"}</div>
+      <div style="font-size:11px;color:#58a6ff;margin-top:4px">avg score · n=${late.length}</div>
+    </div>
+  `;
+
+  document.getElementById("med-info").innerHTML=`Positive r = taking ${name} earlier correlates with better sleep score.`;
+
+  // Scatter
+  if(medChart){medChart.destroy();medChart=null;}
+  const mn=Math.min(...data.map(d=>d.hrs)),mx=Math.max(...data.map(d=>d.hrs));
+  let sumX=0,sumY=0,sumXY=0,sumX2=0,n=data.length;
+  data.forEach(d=>{sumX+=d.hrs;sumY+=d.score;sumXY+=d.hrs*d.score;sumX2+=d.hrs*d.hrs;});
+  const slope=(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX);
+  const intercept=(sumY-slope*sumX)/n;
+
+  medChart=new Chart(document.getElementById("med-chart"),{
+    type:"scatter",
+    data:{datasets:[
+      {label:"Nights",data:data.map(d=>({x:d.hrs,y:d.score})),
+       backgroundColor:"rgba(88,166,255,0.65)",pointRadius:6,pointHoverRadius:8},
+      {label:"Trend",type:"line",
+       data:[{x:mn,y:slope*mn+intercept},{x:mx,y:slope*mx+intercept}],
+       borderColor:"#f0883e",borderWidth:2.5,pointRadius:0,tension:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{title:{display:true,text:"Hours before bed",color:"#7d8590",font:{size:11}},
+           ticks:{color:"#7d8590",font:{size:10}},grid:{color:"rgba(255,255,255,0.06)"}},
+        y:{min:30,max:105,title:{display:true,text:"Sleep score",color:"#7d8590",font:{size:11}},
+           ticks:{color:"#7d8590",font:{size:10}},grid:{color:"rgba(255,255,255,0.06)"}}
+      }}
+  });
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function showPage(id,tab){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  if(tab)tab.classList.add("active");
+  if(id==="data")renderData();
+  if(id==="corr")renderCorr();
+  if(id==="med"){renderMedSelect();}
+}
+
+function toggleSettings(){
+  document.getElementById("settings-panel").classList.toggle("open");
+}
+
+function saveGS(){
+  gsConfig.sheetId=document.getElementById("gs-sheet-id").value;
+  gsConfig.token=document.getElementById("gs-token").value;
+  localStorage.setItem("sleep_gs",JSON.stringify(gsConfig));
+}
+
+function setSyncStatus(msg,color){
+  const el=document.getElementById("sync-status");
+  el.textContent=msg;el.style.color=color||"#7d8590";
+}
+
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.style.opacity="1";
+  setTimeout(()=>t.style.opacity="0",2500);
+}
+</script>
+</body>
+</html>
