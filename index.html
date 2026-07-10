@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Together</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d1117;color:#e6edf3;font-family:Inter,-apple-system,sans-serif;min-height:100vh;font-size:16px}
+.nav{background:#161b22;border-bottom:1px solid #21262d;display:flex;align-items:center;overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:100;padding:0 12px}
+.nav::-webkit-scrollbar{display:none}
+.nav-brand{font-size:15px;font-weight:700;padding:13px 12px 13px 0;border-right:1px solid #21262d;margin-right:6px;white-space:nowrap;flex-shrink:0;color:#58a6ff}
+.nav-tab{padding:13px 12px;font-size:13px;font-weight:600;color:#58a6ff;opacity:.5;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;flex-shrink:0}
+.nav-tab.active{opacity:1;border-bottom-color:#58a6ff}
+.page{display:none;padding:16px 14px;max-width:600px;margin:0 auto}
+.page.active{display:block}
+.card{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:14px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#58a6ff;border-bottom:1px solid #21262d;padding-bottom:8px;margin-bottom:12px}
+.flabel{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#58a6ff;margin-bottom:5px}
+input{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-family:inherit;font-size:15px;padding:9px 12px;outline:none}
+input:focus{border-color:#58a6ff}
+.btn-save{width:100%;padding:12px;background:#58a6ff;color:#000;border:none;border-radius:7px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
+.loc-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.loc-btn{padding:14px;border:2px solid #30363d;border-radius:8px;background:#0d1117;color:#7d8590;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
+.loc-btn.sel-larry{border-color:#58a6ff;background:rgba(88,166,255,.12);color:#58a6ff}
+.loc-btn.sel-liz{border-color:#bc8cff;background:rgba(188,140,255,.12);color:#bc8cff}
+.sex-btn{width:100%;padding:13px;border:2px solid #30363d;border-radius:8px;background:#0d1117;color:#7d8590;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:12px;transition:all .15s}
+.sex-btn.on{border-color:#79b8ff;background:rgba(121,184,255,.2);color:#79b8ff;font-weight:700}
+.sex-btn.fight-on{border-color:#79b8ff;background:rgba(121,184,255,.2);color:#79b8ff;font-weight:700}
+.mrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.metric{background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:12px 14px}
+.mlabel{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#58a6ff;margin-bottom:4px}
+.mval{font-size:22px;font-weight:700;font-family:monospace;color:#58a6ff}
+.msub{font-size:11px;color:#58a6ff;opacity:.6;margin-top:2px}
+.entry{background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:11px 13px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.chip-row{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{padding:6px 14px;border:1px solid #30363d;border-radius:20px;font-size:13px;font-weight:600;color:#58a6ff;opacity:.5;cursor:pointer;white-space:nowrap;background:transparent}
+.chip.active{opacity:1;border-color:#58a6ff;background:rgba(88,166,255,.1)}
+.sbar{height:10px;border-radius:5px;background:#21262d;overflow:hidden;display:flex;margin:4px 0}
+.sbar-l{background:#58a6ff;transition:width .4s}
+.sbar-liz{background:#bc8cff;transition:width .4s}
+.sbar-sex{background:#f0883e;transition:width .4s}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#58a6ff;color:#000;padding:10px 22px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;white-space:nowrap}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:200;overflow-y:auto}
+.modal-inner{background:#161b22;border:1px solid #21262d;border-radius:10px;margin:20px 14px;padding:16px}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.modal-ttl{font-size:16px;font-weight:700;color:#58a6ff}
+.modal-x{font-size:22px;cursor:pointer;color:#58a6ff;opacity:.6}
+
+.fight-sub-group{margin-bottom:6px}
+.fight-sub-label{display:flex;align-items:center;gap:8px;font-size:14px;color:#e6edf3;cursor:pointer;padding:3px 0}
+.fight-sub-label input{accent-color:#58a6ff;width:15px;height:15px;flex-shrink:0}
+.fight-detail{padding-left:20px;margin-top:4px;border-left:1px solid #30363d}
+.fight-opt{display:flex;align-items:center;gap:8px;font-size:13px;color:#58a6ff;cursor:pointer;padding:3px 0}
+.fight-opt input{accent-color:#58a6ff;width:14px;height:14px;flex-shrink:0}border-radius:5px;background:#0d1117;color:#7d8590;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
+.cdrop-wrap{position:relative;margin-bottom:0}
+.cdrop-sel{background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#58a6ff;font-family:inherit;font-size:14px;padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+.cdrop-sel:active{border-color:#58a6ff}
+.cdrop-arrow{font-size:11px;opacity:.7}
+.cdrop-list{position:absolute;top:100%;left:0;right:0;background:#161b22;border:1px solid #58a6ff;border-radius:6px;z-index:100;margin-top:2px;max-height:280px;overflow-y:auto}
+.cdrop-item{padding:11px 14px;font-size:14px;color:#58a6ff;cursor:pointer;border-bottom:1px solid #21262d}
+.cdrop-item:last-child{border-bottom:none}
+.cdrop-item:active,.cdrop-item:hover{background:rgba(88,166,255,.12)}border-radius:5px;background:#0d1117;color:#58a6ff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;width:100%}
+.rating-btn.on{border-color:#58a6ff;background:#58a6ff;color:#000;font-weight:800}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-brand">&#128153; Together</div>
+  <div class="nav-tab active" onclick="showPage('log',this)">&#128221; Log</div>
+  <div class="nav-tab" onclick="showPage('summary',this)">&#128202; Summary</div>
+  <div class="nav-tab" onclick="showPage('history',this)">&#128203; History</div>
+  <div class="nav-tab" onclick="showPage('scoring',this)">&#127775; Scoring</div>
+</div>
+<div id="toast"></div>
+
+<!-- LOG -->
+<div class="page active" id="page-log">
+  <div class="card">
+    <div class="card-title">Log Night</div>
+    <div style="margin-bottom:12px">
+      <label class="flabel">Date</label>
+      <input type="date" id="f-date">
+    </div>
+
+    <label class="flabel">Where We Slept</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <button class="loc-btn" id="btn-larry" onclick="selLoc('larry')" style="padding:14px 4px">&#127968; Larry's</button>
+      <button class="loc-btn" id="btn-liz" onclick="selLoc('liz')" style="padding:14px 4px">&#127968; Liz's</button>
+      <button class="loc-btn" id="btn-hotel" onclick="selLoc('hotel')" style="padding:14px 4px">&#127970; Hotel</button>
+    </div>
+
+    <label class="flabel">Together or Alone?</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <button class="loc-btn" id="btn-together" onclick="selTogether('together')" style="padding:14px 4px">&#128145; Together</button>
+      <button class="loc-btn" id="btn-alone" onclick="selTogether('alone')" style="padding:14px 4px">&#127771; Alone</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+      <button class="sex-btn" id="sex-btn" onclick="togSex()" style="margin-bottom:0;padding:14px 4px;font-size:13px">&#10084;&#65039; Had Sex</button>
+      <button class="sex-btn" id="fight-btn" onclick="togFight()" style="border-color:#30363d;color:#7d8590;margin-bottom:0;padding:14px 4px;font-size:13px">&#128165; We Fought</button>
+      <button class="sex-btn" id="pleasant-btn" onclick="togPleasant()" style="border-color:#30363d;color:#7d8590;margin-bottom:0;padding:14px 4px;font-size:13px">&#10024; Pleasant</button>
+    </div>
+    <div id="fight-rating-wrap" style="display:none;margin-bottom:8px;background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:10px 12px">
+      <label class="flabel" style="margin-bottom:6px">&#128165; Rate the fight severity (1-10)</label>
+      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px" id="fight-rating-btns"></div>
+      <div id="fight-score-hint" style="font-size:12px;color:#f85149;margin-top:6px"></div>
+    </div>
+    <div style="margin-bottom:12px">
+      <button class="sex-btn" id="deesc-btn" onclick="togDeesc()" style="border-color:#30363d;color:#7d8590;width:100%;margin-bottom:0;padding:14px 4px">&#129325; Fight Deescalated</button>
+    </div>
+    <div id="deesc-topic-wrap" style="display:none;margin-bottom:12px;background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:10px 12px">
+      <label class="flabel" style="margin-bottom:6px">&#129325; What was it about?</label>
+      <select id="deesc-topic" style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#58a6ff;font-family:inherit;font-size:14px;padding:9px 12px;outline:none">
+        <option value="">Select topic…</option>
+        <option value="Bella">Bella (-5 pts)</option>
+        <option value="Priority - she focuses on friends/kids">Priority - she focuses on friends/kids</option>
+        <option value="Priority - I focus on friends/kids">Priority - I focus on friends/kids</option>
+        <option value="Finances">Finances</option>
+        <option value="Parenting">Parenting (-5 pts)</option>
+        <option value="Staying over each other's houses">Staying over each other&#39;s houses</option>
+        <option value="Jealousy - me">Jealousy - me</option>
+        <option value="Jealousy - her">Jealousy - her</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div style="margin-top:12px">
+      <label class="flabel" style="color:#3fb950;margin-bottom:8px">&#128077; What was good</label>
+      <div id="good-checks" style="display:grid;grid-template-columns:1fr;gap:5px;margin-bottom:14px"></div>
+      <label class="flabel" style="color:#f85149;margin-bottom:8px">&#128078; What was bad</label>
+      <div id="bad-checks">
+        <!-- Fight toggle -->
+        <label style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:#e6edf3;cursor:pointer;padding:6px 0;border-bottom:1px solid #21262d;margin-bottom:8px">
+          <input type="checkbox" id="bad-fight" onchange="toggleFightSubs()" style="accent-color:#58a6ff;width:16px;height:16px;flex-shrink:0"> Fight
+        </label>
+        <!-- Fight sub-options -->
+        <div id="fight-subs" style="display:none;padding-left:16px;border-left:2px solid #30363d;margin-bottom:10px">
+
+          <!-- Kids -->
+          <div class="fight-sub-group">
+            <label class="fight-sub-label"><input type="checkbox" class="fsub" id="fsub-kids" onchange="toggleSub('kids-detail')" style="accent-color:#58a6ff"> Kids</label>
+            <div id="kids-detail" class="fight-detail" style="display:none">
+              <label class="fight-opt"><input type="checkbox" id="fsub-kids-larry" style="accent-color:#58a6ff"> Larry's kids</label>
+              <label class="fight-opt"><input type="checkbox" id="fsub-kids-liz" style="accent-color:#58a6ff"> Liz's kids</label>
+            </div>
+          </div>
+
+          <!-- Not a priority -->
+          <div class="fight-sub-group">
+            <label class="fight-sub-label"><input type="checkbox" class="fsub" id="fsub-priority" onchange="toggleSub('priority-detail')" style="accent-color:#58a6ff"> Not a priority</label>
+            <div id="priority-detail" class="fight-detail" style="display:none">
+              <label class="fight-opt"><input type="checkbox" id="fsub-priority-larry" style="accent-color:#58a6ff"> Larry doesn't feel like a priority</label>
+              <label class="fight-opt"><input type="checkbox" id="fsub-priority-liz" style="accent-color:#58a6ff"> Liz doesn't feel like a priority</label>
+            </div>
+          </div>
+
+          <!-- Work -->
+          <div class="fight-sub-group">
+            <label class="fight-sub-label"><input type="checkbox" class="fsub" id="fsub-work" style="accent-color:#58a6ff"> Work</label>
+          </div>
+
+          <!-- Jealousy -->
+          <div class="fight-sub-group">
+            <label class="fight-sub-label"><input type="checkbox" class="fsub" id="fsub-jealousy" onchange="toggleSub('jealousy-detail')" style="accent-color:#58a6ff"> Jealousy</label>
+            <div id="jealousy-detail" class="fight-detail" style="display:none">
+              <label class="fight-opt"><input type="checkbox" id="fsub-jealousy-larry" style="accent-color:#58a6ff"> Larry feels it</label>
+              <label class="fight-opt"><input type="checkbox" id="fsub-jealousy-liz" style="accent-color:#58a6ff"> Liz feels it</label>
+            </div>
+          </div>
+
+          <!-- Grooming / Dressing -->
+          <div class="fight-sub-group">
+            <label class="fight-sub-label"><input type="checkbox" class="fsub" id="fsub-grooming" onchange="toggleSub('grooming-detail')" style="accent-color:#58a6ff"> Grooming / Dressing</label>
+            <div id="grooming-detail" class="fight-detail" style="display:none">
+              <label class="fight-opt"><input type="checkbox" id="fsub-grooming-larry" style="accent-color:#58a6ff"> Larry complaining about Liz</label>
+              <label class="fight-opt"><input type="checkbox" id="fsub-grooming-liz" style="accent-color:#58a6ff"> Liz complaining about Larry</label>
+            </div>
+          </div>
+
+          <!-- Parenting -->
+          <div class="fight-sub-group">
+            <label class="fight-sub-label"><input type="checkbox" class="fsub" id="fsub-parenting" onchange="toggleSub('parenting-detail')" style="accent-color:#58a6ff"> Parenting</label>
+            <div id="parenting-detail" class="fight-detail" style="display:none">
+              <label class="fight-opt"><input type="checkbox" id="fsub-parenting-larry" style="accent-color:#58a6ff"> How Larry parents</label>
+              <label class="fight-opt"><input type="checkbox" id="fsub-parenting-liz" style="accent-color:#58a6ff"> How Liz parents</label>
+            </div>
+          </div>
+
+          <!-- Where we sleep -->
+          <div class="fight-sub-group">
+            <label class="fight-sub-label"><input type="checkbox" class="fsub" id="fsub-sleep" onchange="toggleSub('sleep-detail')" style="accent-color:#58a6ff"> Where we sleep</label>
+            <div id="sleep-detail" class="fight-detail" style="display:none">
+              <label class="fight-opt"><input type="checkbox" id="fsub-sleep-larry" style="accent-color:#58a6ff"> Larry's house</label>
+              <label class="fight-opt"><input type="checkbox" id="fsub-sleep-liz" style="accent-color:#58a6ff"> Liz's house</label>
+            </div>
+          </div>
+
+          <!-- Vacation -->
+          <div class="fight-sub-group">
+            <label class="fight-sub-label"><input type="checkbox" class="fsub" id="fsub-vacation" style="accent-color:#58a6ff"> Vacation</label>
+          </div>
+
+          <!-- Money -->
+          <div class="fight-sub-group">
+            <label class="fight-sub-label"><input type="checkbox" class="fsub" id="fsub-money" style="accent-color:#58a6ff"> Money</label>
+          </div>
+
+          <!-- In front of kids -->
+          <div class="fight-sub-group">
+            <label class="fight-sub-label"><input type="checkbox" class="fsub" id="fsub-kids-behavior" onchange="toggleSub('kids-behavior-detail')" style="accent-color:#58a6ff"> How we act in front of kids</label>
+            <div id="kids-behavior-detail" class="fight-detail" style="display:none">
+              <label class="fight-opt"><input type="checkbox" id="fsub-kb-larry" style="accent-color:#58a6ff"> Larry acts bad</label>
+              <label class="fight-opt"><input type="checkbox" id="fsub-kb-liz" style="accent-color:#58a6ff"> Liz acts bad</label>
+            </div>
+          </div>
+
+          <!-- Free form notes -->
+          <div style="margin-top:8px">
+            <label style="font-size:12px;color:#58a6ff;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;display:block">Notes</label>
+            <input type="text" id="fsub-notes" placeholder="Any other details…">
+          </div>
+        </div>
+
+        <!-- Negative Thoughts -->
+        <label style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:#e6edf3;cursor:pointer;padding:6px 0;border-bottom:1px solid #21262d;margin-bottom:8px">
+          <input type="checkbox" id="bad-neg-thoughts" onchange="toggleNegThoughts()" style="accent-color:#58a6ff;width:16px;height:16px;flex-shrink:0"> Negative Thoughts
+        </label>
+        <div id="neg-thoughts-subs" style="display:none;padding-left:16px;border-left:2px solid #30363d;margin-bottom:10px">
+          <label class="fight-opt"><input type="checkbox" id="neg-divino" style="accent-color:#58a6ff"> Divino (-5 pts)</label>
+          <label class="fight-opt"><input type="checkbox" id="neg-bella" style="accent-color:#58a6ff"> Future with Bella (-5 pts)</label>
+          <label class="fight-opt"><input type="checkbox" id="neg-commitment" style="accent-color:#58a6ff"> Will she be with me no matter what (-5 pts)</label>
+          <label class="fight-opt"><input type="checkbox" id="neg-unfair" style="accent-color:#58a6ff"> Treated unfairly (-5 pts)</label>
+        </div>
+
+        <!-- Other bad checkboxes from GOOD section equivalent -->
+        <div id="bad-other-checks" style="margin-top:4px"></div>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <label class="flabel">&#128221; Note</label>
+      <textarea id="log-note-body" rows="3" style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-family:inherit;font-size:15px;padding:9px 12px;outline:none;resize:vertical" placeholder="Anything on your mind…"></textarea>
+    </div>
+    <button class="btn-save" style="margin-top:14px" onclick="saveNight()">&#128190; Save Night</button>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="page" id="page-summary">
+  <div class="chip-row" id="period-chips"></div>
+  <div id="summary-content"></div>
+  <div class="card" id="trends-card" style="display:none">
+    <div class="card-title">&#128200; Rating Trend</div>
+    <div style="position:relative;height:180px">
+      <canvas id="rating-trend-chart"></canvas>
+    </div>
+    <div id="trend-verdict" style="margin-top:10px;font-size:13px;text-align:center"></div>
+  </div>
+  <div class="card" id="reasons-card" style="display:none">
+    <div class="card-title">&#128202; Most Common Reasons</div>
+    <div class="g2" style="gap:14px">
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#3fb950;margin-bottom:8px">&#128077; Good</div>
+        <div id="good-reasons"></div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#f85149;margin-bottom:8px">&#128078; Bad</div>
+        <div id="bad-reasons"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="chart-card" style="display:none">
+    <div class="card-title">Monthly % Trends</div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap" id="chart-toggles">
+      <button class="chip" id="tog-larry"   onclick="togLine('larry')"  >Larry's %</button>
+      <button class="chip" id="tog-liz"     onclick="togLine('liz')"    >Liz's %</button>
+      <button class="chip" id="tog-sex"     onclick="togLine('sex')"    >Sex %</button>
+      <button class="chip" id="tog-fought"  onclick="togLine('fought')" >Fought %</button>
+      <button class="chip active" id="tog-score"   onclick="togLine('score')"  >Avg Score</button>
+    </div>
+    <div style="position:relative;height:240px">
+      <canvas id="trend-chart"></canvas>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:10px;font-size:11px;flex-wrap:wrap">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:#58a6ff;display:inline-block;border-radius:2px"></span>Larry's %</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:#bc8cff;display:inline-block;border-radius:2px"></span>Liz's %</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:#f0883e;display:inline-block;border-radius:2px"></span>Sex %</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:#58a6ff;display:inline-block;border-radius:2px"></span>Fought %</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:3px;background:#3fb950;display:inline-block;border-radius:2px"></span>Avg Score</span>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="page" id="page-history">
+  <div id="history-content"></div>
+</div>
+
+<!-- SCORING PAGE -->
+<div class="page" id="page-scoring">
+  <div class="card">
+    <div class="card-title">&#127775; Scoring Reference</div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#3fb950;margin-bottom:8px">Positive</div>
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>&#10084;&#65039; Had Sex</span><span style="color:#3fb950;font-weight:700">+10</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>&#10024; Pleasant Surprise</span><span style="color:#3fb950;font-weight:700">+10</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>&#129325; Fight Deescalated</span><span style="color:#3fb950;font-weight:700">+5</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Confided in each other</span><span style="color:#3fb950;font-weight:700">+10</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Affectionate</span><span style="color:#3fb950;font-weight:700">+10</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Good comfortable feeling</span><span style="color:#3fb950;font-weight:700">+5</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Good conversation</span><span style="color:#3fb950;font-weight:700">+10</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Helped each other</span><span style="color:#3fb950;font-weight:700">+10</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0"><span>Made each other feel a priority</span><span style="color:#3fb950;font-weight:700">+15</span></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#f85149;margin-bottom:8px">Fight Penalties (by severity rating)</div>
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Rating 1–2</span><span style="color:#f85149;font-weight:700">-5</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Rating 3–5</span><span style="color:#f85149;font-weight:700">-10</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Rating 5–7</span><span style="color:#f85149;font-weight:700">-15</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0"><span>Rating 8–10</span><span style="color:#f85149;font-weight:700">-20</span></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#f0883e;margin-bottom:8px">Deescalation Topic Modifiers</div>
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Bella</span><span style="color:#f0883e;font-weight:700">-5</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Parenting</span><span style="color:#f0883e;font-weight:700">-5</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Priority - friends/kids</span><span style="color:#58a6ff;font-weight:700">neutral</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Finances</span><span style="color:#58a6ff;font-weight:700">neutral</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #21262d"><span>Staying over</span><span style="color:#58a6ff;font-weight:700">neutral</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0"><span>Jealousy</span><span style="color:#58a6ff;font-weight:700">neutral</span></div>
+      </div>
+    </div>
+    <div style="background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:12px 14px;font-size:13px;color:#58a6ff">
+      <strong>Max per night:</strong> +85 pts &nbsp;|&nbsp; <strong>Min per night:</strong> -20 pts
+    </div>
+  </div>
+</div>
+
+<!-- EDIT NOTE MODAL -->
+<div class="modal" id="edit-note-modal">
+  <div class="modal-inner">
+    <div class="modal-hdr">
+      <div class="modal-ttl">Edit Note</div>
+      <div class="modal-x" onclick="closeEditNote()">&#10005;</div>
+    </div>
+    <div style="margin-bottom:10px">
+      <label class="flabel">Title</label>
+      <input type="text" id="en-title">
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="flabel">Details</label>
+      <textarea id="en-body" rows="5" style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-family:inherit;font-size:15px;padding:9px 12px;outline:none;resize:vertical"></textarea>
+    </div>
+    <button class="btn-save" onclick="saveEditNote()">&#128190; Save Changes</button>
+    <button class="btn-del" onclick="delNote()">&#128465; Delete</button>
+  </div>
+</div>
+<div class="modal" id="edit-modal">
+  <div class="modal-inner">
+    <div class="modal-hdr">
+      <div class="modal-ttl">Edit Entry</div>
+      <div class="modal-x" onclick="closeEdit()">&#10005;</div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="flabel">Date</label>
+      <input type="date" id="e-date">
+    </div>
+    <label class="flabel">Together or Alone?</label>
+    <div class="loc-group" style="margin-bottom:12px">
+      <button class="loc-btn" id="e-btn-together" onclick="eSelTogether('together')">&#128145; Together</button>
+      <button class="loc-btn" id="e-btn-alone" onclick="eSelTogether('alone')">&#127771; Alone</button>
+    </div>
+    <label class="flabel">Where?</label>
+    <div class="loc-group">
+      <button class="loc-btn" id="e-btn-larry" onclick="eSelLoc('larry')">&#127968; Larry's</button>
+      <button class="loc-btn" id="e-btn-liz" onclick="eSelLoc('liz')">&#127968; Liz's</button>
+    </div>
+    <div style="margin-bottom:12px">
+      <button class="loc-btn" id="e-btn-hotel" onclick="eSelLoc('hotel')" style="width:100%">&#127970; Hotel</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+      <button class="sex-btn" id="e-sex-btn" onclick="eTogSex()" style="margin-bottom:0;padding:10px 4px;font-size:12px">&#10084;&#65039; Had Sex</button>
+      <button class="sex-btn" id="e-fight-btn" onclick="eTogFight()" style="border-color:#30363d;color:#7d8590;margin-bottom:0;padding:10px 4px;font-size:12px">&#128165; We Fought</button>
+      <button class="sex-btn" id="e-deesc-btn" onclick="eTogDeesc()" style="border-color:#30363d;color:#7d8590;margin-bottom:0;padding:10px 4px;font-size:11px">&#129325; Deescalated</button>
+    </div>
+    <div id="e-deesc-topic-wrap" style="display:none;margin-bottom:8px;background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:10px 12px">
+      <label class="flabel" style="margin-bottom:6px">&#129325; What was it about?</label>
+<div class="cdrop-wrap" id="e-deesc-topic-wrap">
+      <div class="cdrop-sel" id="e-deesc-topic-display" onclick="toggleDrop('e-deesc-topic')">Select topic… <span class="cdrop-arrow">&#9660;</span></div>
+      <div class="cdrop-list" id="e-deesc-topic-list" style="display:none"><div class="cdrop-item" onclick="selDeescTopic('e-deesc-topic','')">Select topic…</div><div class="cdrop-item" onclick="selDeescTopic('e-deesc-topic','Bella')">Bella (-5 pts)</div><div class="cdrop-item" onclick="selDeescTopic('e-deesc-topic','Priority - she focuses on friends/kids')">Priority - she focuses on friends/kids</div><div class="cdrop-item" onclick="selDeescTopic('e-deesc-topic','Priority - I focus on friends/kids')">Priority - I focus on friends/kids</div><div class="cdrop-item" onclick="selDeescTopic('e-deesc-topic','Finances')">Finances</div><div class="cdrop-item" onclick="selDeescTopic('e-deesc-topic','Parenting')">Parenting (-5 pts)</div><div class="cdrop-item" onclick="selDeescTopic('e-deesc-topic','Staying over each other's houses')">Staying over each other's houses</div><div class="cdrop-item" onclick="selDeescTopic('e-deesc-topic','Jealousy - me')">Jealousy - me</div><div class="cdrop-item" onclick="selDeescTopic('e-deesc-topic','Jealousy - her')">Jealousy - her</div><div class="cdrop-item" onclick="selDeescTopic('e-deesc-topic','Other')">Other</div></div>
+      <input type="hidden" id="e-deesc-topic" value="">
+    </div>
+    </div>
+    <div id="e-fight-rating-wrap" style="display:none;margin-bottom:8px;background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:10px 12px">
+      <label class="flabel" style="margin-bottom:6px">&#128165; Rate the fight severity (1-10)</label>
+      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px" id="e-fight-rating-btns"></div>
+      <div id="e-fight-score-hint" style="font-size:12px;color:#f85149;margin-top:6px"></div>
+    </div>
+    <div style="margin-bottom:12px">
+      <button class="sex-btn" id="e-pleasant-btn" onclick="eTogPleasant()" style="border-color:#30363d;color:#7d8590;width:100%;margin-bottom:0;padding:14px 4px">&#10024; Pleasant Surprise</button>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="flabel" style="color:#3fb950;margin-bottom:6px">&#128077; What was good</label>
+      <div id="e-good-checks" style="display:grid;grid-template-columns:1fr;gap:4px;margin-bottom:12px"></div>
+      <label class="flabel" style="color:#f85149;margin-bottom:6px">&#128078; What was bad</label>
+      <div id="e-bad-checks" style="display:grid;grid-template-columns:1fr;gap:4px"></div>
+    </div>
+    <button class="btn-save" onclick="saveEdit()">&#128190; Save Changes</button>
+    <button class="btn-del" onclick="delEntry()">&#128465; Delete</button>
+  </div>
+</div>
+
+<script>
+var entries = [];
+try { entries = JSON.parse(localStorage.getItem('together_v1') || '[]'); } catch(e) {}
+
+var loc = null;
+var sleptTogether = null;
+var sex = false;
+var fought = false;
+var deesc = false;
+var deescTopic = '';
+var pleasant = false;
+var rating = 0;
+var eLoc = null;
+var eSleptTogether = null;
+var eSex = false;
+var eFought = false;
+var eDeesc = false;
+var eDeescTopic = '';
+var ePleasant = false;
+var eRating = 0;
+var editId = null;
+var period = 'month';
+
+var LARRY = '#58a6ff';
+var LIZ   = '#bc8cff';
+var SEX   = '#f0883e';
+
+function save() { localStorage.setItem('together_v1', JSON.stringify(entries)); }
+function today() { return new Date().toISOString().split('T')[0]; }
+function toast(m) {
+  var t = document.getElementById('toast');
+  t.textContent = m; t.style.opacity = '1';
+  setTimeout(function(){ t.style.opacity = '0'; }, 2500);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('f-date').value = today();
+  buildCheckboxes('good-checks', GOOD_OPTS, 'good');
+  // bad-checks has static Fight HTML — no buildCheckboxes needed
+  renderAll();
+});
+
+function selTogether(val) {
+  sleptTogether = val;
+  document.getElementById('btn-together').className = 'loc-btn' + (val === 'together' ? ' sel-larry' : '');
+  document.getElementById('btn-alone').className    = 'loc-btn' + (val === 'alone'    ? ' sel-liz'   : '');
+}
+
+function eSelTogether(val) {
+  eSleptTogether = val;
+  document.getElementById('e-btn-together').className = 'loc-btn' + (val === 'together' ? ' sel-larry' : '');
+  document.getElementById('e-btn-alone').className    = 'loc-btn' + (val === 'alone'    ? ' sel-liz'   : '');
+}
+
+function selLoc(l) {
+  loc = l;
+  document.getElementById('btn-larry').className = 'loc-btn' + (l === 'larry' ? ' sel-larry' : '');
+  document.getElementById('btn-liz').className   = 'loc-btn' + (l === 'liz'   ? ' sel-liz'   : '');
+  document.getElementById('btn-hotel').className = 'loc-btn' + (l === 'hotel' ? ' sel-larry' : '');
+}
+
+function eSelLoc(l) {
+  eLoc = l;
+  document.getElementById('e-btn-larry').className = 'loc-btn' + (l === 'larry' ? ' sel-larry' : '');
+  document.getElementById('e-btn-liz').className   = 'loc-btn' + (l === 'liz'   ? ' sel-liz'   : '');
+  document.getElementById('e-btn-hotel').className = 'loc-btn' + (l === 'hotel' ? ' sel-larry' : '');
+}
+
+function toggleDrop(id) {
+  var list = document.getElementById(id + '-list');
+  if (!list) return;
+  var isOpen = list.style.display !== 'none';
+  // Close all open dropdowns first
+  document.querySelectorAll('.cdrop-list').forEach(function(l){ l.style.display='none'; });
+  list.style.display = isOpen ? 'none' : 'block';
+}
+
+function selDeescTopic(id, val) {
+  var labels = {
+    '': 'Select topic…',
+    'Bella': 'Bella (-5 pts)',
+    'Priority - she focuses on friends/kids': 'Priority - she focuses on friends/kids',
+    'Priority - I focus on friends/kids': 'Priority - I focus on friends/kids',
+    'Finances': 'Finances',
+    'Parenting': 'Parenting (-5 pts)',
+    "Staying over each other's houses": "Staying over each other's houses",
+    'Jealousy - me': 'Jealousy - me',
+    'Jealousy - her': 'Jealousy - her',
+    'Other': 'Other'
+  };
+  document.getElementById(id).value = val;
+  var disp = document.getElementById(id + '-display');
+  if (disp) disp.innerHTML = (labels[val] || val) + ' <span class="cdrop-arrow">&#9660;</span>';
+  document.getElementById(id + '-list').style.display = 'none';
+}
+
+// Close dropdowns when tapping outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.cdrop-wrap')) {
+    document.querySelectorAll('.cdrop-list').forEach(function(l){ l.style.display='none'; });
+  }
+});
+
+function togDeesc() {
+  deesc = !deesc;
+  var b = document.getElementById('deesc-btn');
+  b.className = deesc ? 'sex-btn on' : 'sex-btn';
+  b.innerHTML = deesc ? '&#129325; Fight Deescalated &#10003;' : '&#129325; Fight Deescalated';
+  var wrap = document.getElementById('deesc-topic-wrap');
+  if (wrap) wrap.style.display = deesc ? 'block' : 'none';
+  if (!deesc) { var sel = document.getElementById('deesc-topic'); if(sel) sel.value = ''; }
+}
+
+function eTogDeesc() {
+  eDeesc = !eDeesc;
+  var b = document.getElementById('e-deesc-btn');
+  b.className = eDeesc ? 'sex-btn on' : 'sex-btn';
+  b.innerHTML = eDeesc ? '&#129325; Fight Deescalated &#10003;' : '&#129325; Fight Deescalated';
+  var wrap = document.getElementById('e-deesc-topic-wrap');
+  if (wrap) wrap.style.display = eDeesc ? 'block' : 'none';
+}
+
+function togPleasant() {
+  pleasant = !pleasant;
+  var b = document.getElementById('pleasant-btn');
+  b.className = pleasant ? 'sex-btn on' : 'sex-btn';
+  b.innerHTML = pleasant ? '&#10024; Pleasant &#10003;' : '&#10024; Pleasant Surprise';
+}
+
+function eTogPleasant() {
+  ePleasant = !ePleasant;
+  var b = document.getElementById('e-pleasant-btn');
+  b.className = ePleasant ? 'sex-btn on' : 'sex-btn';
+  b.innerHTML = ePleasant ? '&#10024; Pleasant &#10003;' : '&#10024; Pleasant Surprise';
+}
+
+var fightRating = 0;
+var eFightRating = 0;
+
+function buildFightRatingBtns(containerId, selected) {
+  var html = '';
+  for (var i = 1; i <= 10; i++) {
+    html += '<button class="rating-btn' + (i === selected ? ' on' : '') + '" onclick="selFightRating(' + i + ',\'' + (containerId.startsWith('e') ? 'e' : '') + '\')" style="padding:6px 2px;font-size:13px">' + i + '</button>';
+  }
+  document.getElementById(containerId).innerHTML = html;
+}
+
+function selFightRating(n, prefix) {
+  if (prefix === 'e') { eFightRating = n; } else { fightRating = n; }
+  var id = prefix ? 'e-fight-rating-btns' : 'fight-rating-btns';
+  var btns = document.getElementById(id).querySelectorAll('.rating-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].className = (i + 1 === n) ? 'rating-btn on' : 'rating-btn';
+    btns[i].style.background = (i + 1 === n) ? '#58a6ff' : '#0d1117';
+    btns[i].style.color = (i + 1 === n) ? '#000' : '#58a6ff';
+  }
+  var hint = prefix ? document.getElementById('e-fight-score-hint') : document.getElementById('fight-score-hint');
+  if (hint) {
+    var pts = fightPenalty(n);
+    hint.textContent = 'Fight penalty: ' + pts + ' pts';
+  }
+}
+
+function fightPenalty(r) {
+  if (!r) return 0;
+  if (r < 3) return -5;
+  if (r <= 5) return -10;
+  if (r <= 7) return -15;
+  return -20;
+}
+
+function calcScore(entry) {
+  var score = 0;
+  if (entry.sex) score += 10;
+  if (entry.pleasant) score += 10;
+  if (entry.fought) score += fightPenalty(entry.fightRating || 0);
+  if (entry.deesc) {
+    score += 5;
+    var dt = entry.deescTopic || '';
+    if (dt === 'Bella' || dt === 'Parenting') score -= 5;
+  }
+  var negT = entry.negThoughts || [];
+  score -= negT.length * 5;
+  var good = entry.good || [];
+  if (good.indexOf('Confided in each other') !== -1) score += 10;
+  if (good.indexOf('Affectionate') !== -1) score += 10;
+  if (good.indexOf('Good comfortable feeling') !== -1) score += 5;
+  if (good.indexOf('Good conversation') !== -1) score += 10;
+  if (good.indexOf('Helped each other') !== -1) score += 10;
+  if (good.indexOf('Made each other feel a priority') !== -1) score += 15;
+  return score;
+}
+
+function togFight() {
+  fought = !fought;
+  var b = document.getElementById('fight-btn');
+  b.className = fought ? 'sex-btn fight-on' : 'sex-btn';
+  b.style.borderColor = '';
+  b.style.color = '';
+  b.innerHTML = fought ? '&#128165; We Fought &#10003;' : '&#128165; We Fought';
+  var wrap = document.getElementById('fight-rating-wrap');
+  if (wrap) {
+    wrap.style.display = fought ? 'block' : 'none';
+    if (fought) { fightRating = 0; buildFightRatingBtns('fight-rating-btns', 0); document.getElementById('fight-score-hint').textContent = ''; }
+  }
+}
+
+function eTogFight() {
+  eFought = !eFought;
+  var b = document.getElementById('e-fight-btn');
+  b.className = eFought ? 'sex-btn fight-on' : 'sex-btn';
+  b.style.borderColor = '';
+  b.style.color = '';
+  b.innerHTML = eFought ? '&#128165; We Fought &#10003;' : '&#128165; We Fought';
+  var wrap = document.getElementById('e-fight-rating-wrap');
+  if (wrap) {
+    wrap.style.display = eFought ? 'block' : 'none';
+    if (eFought && !eFightRating) { buildFightRatingBtns('e-fight-rating-btns', 0); }
+  }
+}
+
+function selRating(n, prefix) {
+  if (prefix === 'e') { eRating = n; } else { rating = n; }
+  var id = prefix ? prefix + '-rating-btns' : 'rating-btns';
+  var btns = document.getElementById(id).querySelectorAll('.rating-btn');
+  for (var i = 0; i < btns.length; i++) {
+    if (i + 1 === n) {
+      btns[i].className = 'rating-btn on';
+      btns[i].style.background = '#58a6ff';
+      btns[i].style.color = '#000';
+      btns[i].style.fontWeight = '800';
+    } else {
+      btns[i].className = 'rating-btn';
+      btns[i].style.background = '#0d1117';
+      btns[i].style.color = '#58a6ff';
+      btns[i].style.fontWeight = '600';
+    }
+  }
+}
+
+function buildRatingBtns(containerId, selected) {
+  var rHtml = '';
+  for (var i = 1; i <= 10; i++) {
+    rHtml += '<button style="padding:8px 2px;border:1px solid #58a6ff;border-radius:5px;background:#0d1117;color:#58a6ff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;text-align:center;width:100%;transition:all .15s" class="rating-btn' + (i === selected ? ' on' : '') + '" onclick="selRating(' + i + ',\'' + (containerId.startsWith('e') ? 'e' : '') + '\')">' + i + '</button>';
+  }
+  document.getElementById(containerId).innerHTML = rHtml;
+}
+
+function togSex() {
+  sex = !sex;
+  var b = document.getElementById('sex-btn');
+  b.className = sex ? 'sex-btn on' : 'sex-btn';
+  b.innerHTML = sex ? '&#10084;&#65039; Had Sex &#10003;' : '&#10084;&#65039; Had Sex';
+}
+
+function eTogSex() {
+  eSex = !eSex;
+  var b = document.getElementById('e-sex-btn');
+  b.className = eSex ? 'sex-btn on' : 'sex-btn';
+  b.innerHTML = eSex ? '&#10084;&#65039; Had Sex &#10003;' : '&#10084;&#65039; Had Sex';
+}
+
+function saveNight() {
+  var d = document.getElementById('f-date').value;
+  if (!d) { toast('Select a date'); return; }
+  if (!loc) { toast('Select where you slept'); return; }
+  var dup = entries.filter(function(e){ return e.date === d; });
+  if (dup.length > 0) {
+    if (!confirm('Entry for this date exists. Replace it?')) return;
+    entries = entries.filter(function(e){ return e.date !== d; });
+  }
+  entries.push({ id: Date.now(), date: d, loc: loc, sleptTogether: sleptTogether, sex: sex, fought: fought, fightRating: fightRating, deesc: deesc, deescTopic: document.getElementById('deesc-topic') ? document.getElementById('deesc-topic').value : '', pleasant: pleasant, rating: rating,
+    good: getChecked(GOOD_OPTS, 'good'),
+    bad:  getChecked(BAD_OPTS,  'bad'),
+    negThoughts: getNegThoughts(),
+    fightData: getFightData() });
+  // Save note if filled in
+  var noteTitle = '';
+  var noteBody  = document.getElementById('log-note-body').value.trim();
+  if (noteTitle || noteBody) {
+    notes.unshift({ id: Date.now()+1, title: noteTitle, body: noteBody, date: d });
+    saveNotes();
+  }
+  entries.sort(function(a,b){ return b.date.localeCompare(a.date); });
+  save(); toast('Night logged');
+  loc = null; sleptTogether = null; sex = false; fought = false; fightRating = 0; deesc = false; pleasant = false; rating = 0;
+  var fw = document.getElementById('fight-rating-wrap'); if(fw) fw.style.display='none';
+  document.getElementById('btn-together').className = 'loc-btn';
+  document.getElementById('btn-alone').className    = 'loc-btn';
+  document.getElementById('f-date').value = today();
+  document.getElementById('btn-larry').className = 'loc-btn';
+  document.getElementById('btn-liz').className   = 'loc-btn';
+  document.getElementById('btn-hotel').className = 'loc-btn';
+  document.getElementById('sex-btn').className   = 'sex-btn';
+  document.getElementById('sex-btn').innerHTML   = '&#10084;&#65039; Had Sex';
+  document.getElementById('fight-btn').className = 'sex-btn';
+  document.getElementById('fight-btn').style.color = '#7d8590';
+  document.getElementById('fight-btn').innerHTML = '&#128165; We Fought';
+  document.getElementById('deesc-btn').className = 'sex-btn';
+  document.getElementById('deesc-btn').innerHTML = '&#129325; Deescalated';
+  var dtw = document.getElementById('deesc-topic-wrap'); if(dtw) dtw.style.display='none';
+  selDeescTopic('deesc-topic', '');
+  document.getElementById('pleasant-btn').className = 'sex-btn';
+  document.getElementById('pleasant-btn').innerHTML = '&#10024; Pleasant Surprise';
+  resetChecked(GOOD_OPTS, 'good');
+  resetChecked(BAD_OPTS,  'bad');
+  resetNegThoughts();
+  resetFightSubs();
+  document.getElementById('log-note-body').value = '';
+  renderAll();
+}
+
+function openEdit(id) {
+  var e = null;
+  for (var i = 0; i < entries.length; i++) { if (entries[i].id === id) { e = entries[i]; break; } }
+  if (!e) return;
+  editId = id; eLoc = e.loc; eSleptTogether = e.sleptTogether || null; eSex = e.sex || false; eFought = e.fought || false; eDeesc = e.deesc || false; eRating = e.rating || 0;
+  document.getElementById('e-btn-together').className = 'loc-btn' + (e.sleptTogether === 'together' ? ' sel-larry' : '');
+  document.getElementById('e-btn-alone').className    = 'loc-btn' + (e.sleptTogether === 'alone'    ? ' sel-liz'   : '');
+  document.getElementById('e-date').value = e.date || '';
+  document.getElementById('e-btn-larry').className = 'loc-btn' + (e.loc === 'larry' ? ' sel-larry' : '');
+  document.getElementById('e-btn-liz').className   = 'loc-btn' + (e.loc === 'liz'   ? ' sel-liz'   : '');
+  document.getElementById('e-btn-hotel').className = 'loc-btn' + (e.loc === 'hotel' ? ' sel-larry' : '');
+  var sb = document.getElementById('e-sex-btn');
+  sb.className = eSex ? 'sex-btn on' : 'sex-btn';
+  sb.innerHTML = eSex ? '&#10084;&#65039; Had Sex &#10003;' : '&#10084;&#65039; Had Sex';
+  var fb = document.getElementById('e-fight-btn');
+  fb.className = eFought ? 'sex-btn fight-on' : 'sex-btn';
+  fb.style.borderColor = '';
+  fb.style.color = '';
+  fb.innerHTML = eFought ? '&#128165; We Fought &#10003;' : '&#128165; We Fought';
+  var db = document.getElementById('e-deesc-btn');
+  db.className = eDeesc ? 'sex-btn on' : 'sex-btn';
+  db.innerHTML = eDeesc ? '&#129325; Fight Deescalated &#10003;' : '&#129325; Fight Deescalated';
+  // Fight rating
+  eFightRating = e.fightRating || 0;
+  eDeescTopic = e.deescTopic || '';
+  var etw = document.getElementById('e-deesc-topic-wrap');
+  if (etw) etw.style.display = eDeesc ? 'block' : 'none';
+  selDeescTopic('e-deesc-topic', eDeescTopic || '');
+  var efw = document.getElementById('e-fight-rating-wrap');
+  if (efw) {
+    efw.style.display = eFought ? 'block' : 'none';
+    buildFightRatingBtns('e-fight-rating-btns', eFightRating);
+  }
+  if (document.getElementById('e-rating-btns')) buildRatingBtns('e-rating-btns', eRating);
+  buildCheckboxes('e-good-checks', GOOD_OPTS, 'egood');
+  buildCheckboxes('e-bad-checks',  BAD_OPTS,  'ebad');
+  setChecked(GOOD_OPTS, 'egood', e.good || []);
+  setChecked(BAD_OPTS,  'ebad',  e.bad  || []);
+  document.getElementById('edit-modal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEdit() {
+  document.getElementById('edit-modal').style.display = 'none';
+  document.body.style.overflow = ''; editId = null;
+}
+
+function saveEdit() {
+  if (!editId) return;
+  for (var i = 0; i < entries.length; i++) {
+    if (entries[i].id === editId) {
+      entries[i].date = document.getElementById('e-date').value;
+      entries[i].loc           = eLoc;
+      entries[i].sleptTogether = eSleptTogether;
+      entries[i].sex    = eSex;
+      entries[i].fought = eFought;
+      entries[i].fightRating = eFightRating;
+      entries[i].deesc  = eDeesc;
+      entries[i].deescTopic = document.getElementById('e-deesc-topic') ? document.getElementById('e-deesc-topic').value : '';
+      entries[i].pleasant = ePleasant;
+      entries[i].rating = eRating;
+      entries[i].good   = getChecked(GOOD_OPTS, 'egood');
+      entries[i].bad    = getChecked(BAD_OPTS,  'ebad');
+      break;
+    }
+  }
+  entries.sort(function(a,b){ return b.date.localeCompare(a.date); });
+  save(); toast('Updated'); closeEdit(); renderAll();
+}
+
+function delEntry() {
+  if (!editId) return;
+  if (!confirm('Delete this entry?')) return;
+  entries = entries.filter(function(e){ return e.id !== editId; });
+  save(); toast('Deleted'); closeEdit(); renderAll();
+}
+
+function stats(data) {
+  var n = data.length;
+  var atL = 0, atLiz = 0, atHotel = 0, sexN = 0, foughtN = 0, deescN = 0, ratingSum = 0, ratingCount = 0;
+  for (var i = 0; i < data.length; i++) {
+    if (data[i].loc === 'larry') atL++;
+    if (data[i].loc === 'liz')   atLiz++;
+    if (data[i].loc === 'hotel') atHotel++;
+    if (data[i].sex)    sexN++;
+    if (data[i].fought) foughtN++;
+    if (data[i].deesc)  deescN++;
+    if (data[i].rating) { ratingSum += data[i].rating; ratingCount++; }
+  }
+  var tog = atL + atLiz + atHotel;
+  return {
+    n: n, atL: atL, atLiz: atLiz, atHotel: atHotel, tog: tog, sexN: sexN, foughtN: foughtN, deescN: deescN,
+    avgRating: ratingCount ? Math.round(ratingSum / ratingCount * 10) / 10 : null,
+    pL:      tog     ? Math.round(atL     / tog      * 100) : 0,
+    pLiz:    tog     ? Math.round(atLiz   / tog      * 100) : 0,
+    pSex:    tog     ? Math.round(sexN    / tog      * 100) : 0,
+    pFought: tog     ? Math.round(foughtN / tog      * 100) : 0,
+    pDeesc:  foughtN ? Math.round(deescN  / foughtN  * 100) : 0
+  };
+}
+
+function statBlock(label, s) {
+  var RED = '#58a6ff';
+  return '<div style="margin-bottom:8px;font-size:13px;font-weight:700;color:#e6edf3">' + label + ' <span style="font-size:12px;color:#58a6ff;font-weight:400;opacity:.6">(' + s.tog + ' night' + (s.tog !== 1 ? 's' : '') + ' together)</span></div>' +
+    '<div style="font-size:11px;color:#58a6ff;opacity:.7;margin-bottom:3px">Where slept</div>' +
+    '<div class="sbar">' +
+      '<div class="sbar-l"   style="width:' + s.pL   + '%"></div>' +
+      '<div class="sbar-liz" style="width:' + s.pLiz + '%"></div>' +
+    '</div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px">' +
+    '<span style="color:' + LARRY + '">Larry\'s: ' + s.atL + ' (' + s.pL + '%)</span>' +
+    '<span style="color:' + LIZ + '">Liz\'s: ' + s.atLiz + ' (' + s.pLiz + '%)</span></div>' +
+    '<div class="mrow" style="margin-bottom:0">' +
+      '<div class="metric"><div class="mlabel">Sex Nights</div><div class="mval" style="color:' + SEX + '">' + s.sexN + '</div><div class="msub">' + s.pSex + '% of together</div></div>' +
+      '<div class="metric"><div class="mlabel">Fights</div><div class="mval" style="color:#58a6ff">' + s.foughtN + '</div><div class="msub">' + s.pFought + '% of together</div></div>' +
+      '<div class="metric"><div class="mlabel">Deescalated</div><div class="mval" style="color:#3fb950">' + s.deescN + '</div><div class="msub">' + s.pDeesc + '% of fights</div></div>' +
+      '<div class="metric"><div class="mlabel">Avg Day</div><div class="mval" style="color:#58a6ff">' + (s.avgRating !== null ? s.avgRating : '—') + '</div><div class="msub">out of 10</div></div>' +
+    '</div>';
+}
+
+function renderQuick() {
+  var el = document.getElementById('quick-card');
+  if (!entries.length) { el.innerHTML = '<div style="color:#58a6ff;opacity:.5;font-size:13px">Log your first night to see stats.</div>'; return; }
+  var s = stats(entries);
+  el.innerHTML = '<div class="card-title">All Time</div>' +
+    '<div class="mrow">' +
+    '<div class="metric"><div class="mlabel">Larry\'s</div><div class="mval" style="color:' + LARRY + '">' + s.atL + '</div><div class="msub">' + s.pL + '% of together</div></div>' +
+    '<div class="metric"><div class="mlabel">Liz\'s</div><div class="mval" style="color:' + LIZ + '">' + s.atLiz + '</div><div class="msub">' + s.pLiz + '% of together</div></div>' +
+    '<div class="metric"><div class="mlabel">Sex Nights</div><div class="mval" style="color:' + SEX + '">' + s.sexN + '</div><div class="msub">' + s.pSex + '% of together</div></div>' +
+    '<div class="metric"><div class="mlabel">Fights</div><div class="mval" style="color:#58a6ff">' + s.foughtN + '</div><div class="msub">' + s.pFought + '% of together</div></div>' +
+    '<div class="metric"><div class="mlabel">Deescalated</div><div class="mval" style="color:#3fb950">' + s.deescN + '</div><div class="msub">' + s.pDeesc + '% of fights</div></div>' +
+    '<div class="metric"><div class="mlabel">Eli at Home</div><div class="mval" style="color:' + LARRY + '">' + s.pL + '%</div><div class="msub">of together nights</div></div>' +
+    '<div class="metric"><div class="mlabel">Avg Day</div><div class="mval" style="color:#58a6ff">' + (s.avgRating !== null ? s.avgRating : '—') + '</div><div class="msub">out of 10</div></div>' +
+    '</div>';
+}
+
+function renderSummary() {
+  var el = document.getElementById('summary-content');
+  var now = new Date();
+  var todayStr = today();
+
+  var yest = new Date(now); yest.setDate(yest.getDate()-1);
+  var yesterdayStr = yest.toISOString().split('T')[0];
+  var yesterdayEntry = entries.filter(function(e){ return e.date === yesterdayStr; });
+
+  var weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
+  var weekStr = weekStart.toISOString().split('T')[0];
+  var weekData = entries.filter(function(e){ return e.date >= weekStr && e.date <= todayStr; });
+
+  var monthStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-01';
+  var monthData = entries.filter(function(e){ return e.date >= monthStr && e.date <= todayStr; });
+
+  var allData = entries;
+
+  function scoreBox(label, data) {
+    var avgSc = data.length ? Math.round(data.reduce(function(a,e){ return a + calcScore(e); }, 0) / data.length * 10) / 10 : null;
+    var color = avgSc > 0 ? '#3fb950' : avgSc < 0 ? '#f85149' : '#58a6ff';
+    return '<div class="metric" style="padding:10px 8px;text-align:center">' +
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#58a6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px">' + label + '</div>' +
+      '<div style="font-size:22px;font-weight:700;font-family:monospace;color:' + (avgSc !== null ? color : '#58a6ff') + '">' + (avgSc !== null ? (avgSc > 0 ? '+' : '') + avgSc : '—') + '</div>' +
+      '<div style="font-size:10px;color:#58a6ff;opacity:.6;margin-top:2px">' + (data.length ? 'avg/night (' + data.length + ')' : 'no entry') + '</div>' +
+    '</div>';
+  }
+
+  function pct(n, total) {
+    return total ? Math.round(n/total*100) + '%' : '—';
+  }
+
+  function metricRow(label, color, weekVal, monthVal, yearVal) {
+    return '<div style="background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:12px 14px;margin-bottom:10px">' +
+      '<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:' + color + ';margin-bottom:8px">' + label + '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">' +
+        '<div><div style="font-size:11px;color:#58a6ff;opacity:.6;margin-bottom:3px">Week</div><div style="font-size:20px;font-weight:700;color:' + color + '">' + weekVal + '</div></div>' +
+        '<div><div style="font-size:11px;color:#58a6ff;opacity:.6;margin-bottom:3px">Month</div><div style="font-size:20px;font-weight:700;color:' + color + '">' + monthVal + '</div></div>' +
+        '<div><div style="font-size:11px;color:#58a6ff;opacity:.6;margin-bottom:3px">Year</div><div style="font-size:20px;font-weight:700;color:' + color + '">' + yearVal + '</div></div>' +
+      '</div></div>';
+  }
+
+  function sexPct(data) { return pct(data.filter(function(e){ return e.sex; }).length, data.length); }
+  function fightPct(data) { return pct(data.filter(function(e){ return e.fought; }).length, data.length); }
+  function togPct(data) { return pct(data.filter(function(e){ return e.loc==='larry'||e.loc==='liz'||e.loc==='hotel'; }).length, data.length); }
+  function larryPct(data) { return pct(data.filter(function(e){ return e.loc==='larry'; }).length, data.filter(function(e){ return e.loc==='larry'||e.loc==='liz'||e.loc==='hotel'; }).length); }
+  function lizPct(data) { return pct(data.filter(function(e){ return e.loc==='liz'; }).length, data.filter(function(e){ return e.loc==='larry'||e.loc==='liz'||e.loc==='hotel'; }).length); }
+
+  var yearStr = now.getFullYear() + '-01-01';
+  var yearData = entries.filter(function(e){ return e.date >= yearStr && e.date <= todayStr; });
+
+  document.getElementById('period-chips').innerHTML = '';
+  el.innerHTML =
+    '<div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#58a6ff;margin-bottom:8px">Relationship Score</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:18px">' +
+      scoreBox('Yesterday', yesterdayEntry) +
+      scoreBox('This Week', weekData) +
+      scoreBox('This Month', monthData) +
+      scoreBox('Year', yearData) +
+    '</div>' +
+    metricRow('Sex', SEX, sexPct(weekData), sexPct(monthData), sexPct(yearData)) +
+    metricRow('Fights', '#f85149', fightPct(weekData), fightPct(monthData), fightPct(yearData)) +
+    metricRow('Together', LARRY, togPct(weekData), togPct(monthData), togPct(yearData)) +
+    metricRow('At Larry\'s', LARRY, larryPct(weekData), larryPct(monthData), larryPct(yearData)) +
+    metricRow('At Liz\'s', LIZ, lizPct(weekData), lizPct(monthData), lizPct(yearData));
+
+  renderTrends(monthData);
+  renderReasons(monthData);
+}
+
+function renderHistory() {
+  var el = document.getElementById('history-content');
+  if (!entries.length) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#58a6ff;opacity:.5">No entries yet.</div>'; return; }
+  var histHtml = '';
+  for (var i = 0; i < entries.length; i++) {
+    var e = entries[i];
+    var locLabel = e.loc === 'larry' ? 'Larry\'s' : e.loc === 'liz' ? 'Liz\'s' : e.loc === 'hotel' ? 'Hotel' : 'Unknown';
+    var locColor = e.loc === 'larry' ? LARRY : e.loc === 'liz' ? LIZ : e.loc === 'hotel' ? '#f0883e' : '#7d8590';
+    var icon = e.loc === 'hotel' ? '&#127970;' : '&#127968;';
+    var d = new Date(e.date + 'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    histHtml += '<div class="entry">' +
+      '<div><div style="font-size:14px;font-weight:700">' + d + '</div>' +
+      '<div style="font-size:13px;margin-top:2px;color:' + locColor + '">' + icon + ' ' + locLabel +
+      (e.sleptTogether ? ' &nbsp;' + (e.sleptTogether === 'together' ? '&#128145; Together' : '&#127771; Alone') : '') +
+      (e.sex    ? ' &nbsp;&#10084;&#65039; Sex'              : '') +
+      (e.fought ? ' &nbsp;&#128165; Fought'                   : '') +
+      (e.deesc  ? ' &nbsp;&#129325; Deescalated' + (e.deescTopic ? ' (' + e.deescTopic + ')' : '')  : '') +
+      (e.negThoughts && e.negThoughts.length ? ' &nbsp;&#128308; ' + e.negThoughts.join(', ') : '') +
+      (e.pleasant ? ' &nbsp;&#10024; Pleasant Surprise'         : '') +
+            '</div>' +
+      (e.good && e.good.length ? '<div style="margin-top:4px">' + e.good.map(function(g){ return '<span style="display:inline-block;font-size:11px;color:#3fb950;background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.3);border-radius:10px;padding:2px 7px;margin:2px 3px 0 0">&#128077; ' + g + '</span>'; }).join('') + '</div>' : '') +
+      (e.fightData && e.fightData.subs && e.fightData.subs.length ? '<div style="margin-top:4px">' + e.fightData.subs.map(function(s){ return '<span style="display:inline-block;font-size:11px;color:#f85149;background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);border-radius:10px;padding:2px 7px;margin:2px 3px 0 0">&#128165; ' + s.topic + (s.details.length ? ': ' + s.details.join(', ') : '') + '</span>'; }).join('') + (e.fightData.notes ? '<div style="font-size:11px;color:#f85149;margin-top:3px">Notes: ' + e.fightData.notes + '</div>' : '') + '</div>' : '') +
+      (function(){ var sc = calcScore(e); return '<div style="font-size:13px;font-weight:700;margin-top:5px;color:' + (sc >= 0 ? '#3fb950' : '#f85149') + '">Daily score: ' + (sc > 0 ? '+' : '') + sc + ' pts</div>'; })() +
+      '</div>' +
+      '<button onclick="openEdit(' + e.id + ')" style="padding:5px 12px;background:#1c2128;border:1px solid #30363d;color:#58a6ff;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap">&#9999;&#65039; Edit</button>' +
+      '</div>';
+  }
+  el.innerHTML = histHtml;
+}
+
+function showPage(id, tab) {
+  var pages = document.querySelectorAll('.page');
+  var tabs  = document.querySelectorAll('.nav-tab');
+  for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
+  for (var i = 0; i < tabs.length;  i++) tabs[i].classList.remove('active');
+  document.getElementById('page-' + id).classList.add('active');
+  if (tab) tab.classList.add('active');
+  renderAll();
+}
+
+var trendChart = null;
+var lineVis = {larry:false, liz:false, sex:false, fought:false, score:true};
+
+function togLine(key) {
+  lineVis[key] = !lineVis[key];
+  var btn = document.getElementById('tog-' + key);
+  btn.className = lineVis[key] ? 'chip active' : 'chip';
+  renderChart();
+}
+
+function renderChart() {
+  var months = [];
+  var seen = {};
+  for (var i = 0; i < entries.length; i++) {
+    var m = entries[i].date.slice(0,7);
+    if (!seen[m]) { seen[m] = true; months.push(m); }
+  }
+  months.sort();
+
+  if (months.length < 2) {
+    document.getElementById('chart-card').style.display = 'none';
+    return;
+  }
+  document.getElementById('chart-card').style.display = 'block';
+
+  var labels = [], pL = [], pLiz = [], pSex = [], pFought = [], avgScore = [];
+  for (var i = 0; i < months.length; i++) {
+    var m = months[i];
+    var mData = entries.filter(function(e){ return e.date.slice(0,7) === m; });
+    var ms = stats(mData);
+    labels.push(new Date(m + '-15').toLocaleDateString('en-US',{month:'short',year:'2-digit'}));
+    var mEntries = entries.filter(function(e){ return e.date.slice(0,7) === m; });
+    var mScore = mEntries.length ? Math.round(mEntries.reduce(function(a,e){ return a + calcScore(e); }, 0) / mEntries.length * 10) / 10 : null;
+    pL.push(ms.pL);
+    pLiz.push(ms.pLiz);
+    pSex.push(ms.pSex);
+    pFought.push(ms.pFought);
+    avgScore.push(mScore);
+  }
+
+  var ctx = document.getElementById('trend-chart');
+  if (trendChart) { trendChart.destroy(); trendChart = null; }
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {label:"Larry's %", data:pL,      hidden:!lineVis.larry,  borderColor:'#58a6ff', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#58a6ff', tension:0.3, fill:false},
+        {label:"Liz's %",   data:pLiz,    hidden:!lineVis.liz,    borderColor:'#bc8cff', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#bc8cff', tension:0.3, fill:false},
+        {label:"Sex %",     data:pSex,    hidden:!lineVis.sex,    borderColor:'#f0883e', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#f0883e', tension:0.3, fill:false},
+        {label:"Fought %",  data:pFought, hidden:!lineVis.fought, borderColor:'#58a6ff', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#58a6ff', tension:0.3, fill:false},
+        {label:"Avg Score", data:avgScore,hidden:!lineVis.score,  borderColor:'#3fb950', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#3fb950', tension:0.3, fill:false,
+         spanGaps:true, yAxisID:'y2'}
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: function(c) {
+          if (c.dataset.label === 'Avg Score') return 'Avg Score: ' + c.raw + ' pts';
+          return c.dataset.label + ': ' + c.raw + '%';
+        }}}
+      },
+      scales: {
+        x: { ticks: { color:'#58a6ff', font:{size:11} }, grid: { color:'rgba(88,166,255,.08)' } },
+        y: { min:0, max:100, ticks: { color:'#58a6ff', font:{size:11}, callback: function(v){ return v+'%'; } }, grid: { color:'rgba(88,166,255,.08)' } },
+        y2: { position:'right', ticks: { color:'#3fb950', font:{size:11} }, grid: { display:false } }
+      }
+    }
+  });
+}
+
+var GOOD_OPTS = [
+  'No fights',
+  'Confided in each other',
+  'Good comfortable feeling',
+  'Good conversation',
+  'Affectionate',
+  'Helped each other',
+  'Made each other feel a priority'
+];
+
+var BAD_OPTS = [];  // replaced by fight sub-options
+
+function toggleNegThoughts() {
+  var on = document.getElementById('bad-neg-thoughts').checked;
+  document.getElementById('neg-thoughts-subs').style.display = on ? 'block' : 'none';
+}
+
+function getNegThoughts() {
+  var arr = [];
+  if (document.getElementById('neg-divino') && document.getElementById('neg-divino').checked) arr.push('Divino');
+  if (document.getElementById('neg-bella') && document.getElementById('neg-bella').checked) arr.push('Future with Bella');
+  if (document.getElementById('neg-commitment') && document.getElementById('neg-commitment').checked) arr.push('Will she be with me no matter what');
+  if (document.getElementById('neg-unfair') && document.getElementById('neg-unfair').checked) arr.push('Treated unfairly');
+  return arr;
+}
+
+function resetNegThoughts() {
+  ['neg-divino','neg-bella','neg-commitment','neg-unfair'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.checked = false;
+  });
+  var nb = document.getElementById('bad-neg-thoughts'); if(nb) nb.checked = false;
+  var ns = document.getElementById('neg-thoughts-subs'); if(ns) ns.style.display = 'none';
+}
+
+function toggleFightSubs() {
+  var on = document.getElementById('bad-fight').checked;
+  document.getElementById('fight-subs').style.display = on ? 'block' : 'none';
+}
+
+function toggleSub(detailId) {
+  var detail = document.getElementById(detailId);
+  if (!detail) return;
+  var parentCheck = detail.previousElementSibling;
+  if (!parentCheck) return;
+  var cb = parentCheck.querySelector('input[type=checkbox]');
+  if (!cb) return;
+  detail.style.display = cb.checked ? 'block' : 'none';
+}
+
+function getFightData() {
+  if (!document.getElementById('bad-fight') || !document.getElementById('bad-fight').checked) return null;
+  var subs = [];
+  var checks = [
+    {id:'fsub-kids',     label:'Kids',                  detail:[{id:'fsub-kids-larry',label:"Larry's kids"},{id:'fsub-kids-liz',label:"Liz's kids"}]},
+    {id:'fsub-priority', label:'Not a priority',         detail:[{id:'fsub-priority-larry',label:"Larry doesn't feel like a priority"},{id:'fsub-priority-liz',label:"Liz doesn't feel like a priority"}]},
+    {id:'fsub-work',     label:'Work',                   detail:[]},
+    {id:'fsub-jealousy', label:'Jealousy',               detail:[{id:'fsub-jealousy-larry',label:'Larry feels it'},{id:'fsub-jealousy-liz',label:'Liz feels it'}]},
+    {id:'fsub-grooming', label:'Grooming / Dressing',    detail:[{id:'fsub-grooming-larry',label:'Larry complaining about Liz'},{id:'fsub-grooming-liz',label:'Liz complaining about Larry'}]},
+    {id:'fsub-parenting',label:'Parenting',              detail:[{id:'fsub-parenting-larry',label:"How Larry parents"},{id:'fsub-parenting-liz',label:"How Liz parents"}]},
+    {id:'fsub-sleep',    label:'Where we sleep',         detail:[{id:'fsub-sleep-larry',label:"Larry's house"},{id:'fsub-sleep-liz',label:"Liz's house"}]},
+    {id:'fsub-vacation', label:'Vacation',               detail:[]},
+    {id:'fsub-money',    label:'Money',                  detail:[]},
+    {id:'fsub-kids-behavior',label:'How we act in front of kids',detail:[{id:'fsub-kb-larry',label:'Larry acts bad'},{id:'fsub-kb-liz',label:'Liz acts bad'}]}
+  ];
+  for (var i = 0; i < checks.length; i++) {
+    var el = document.getElementById(checks[i].id);
+    if (el && el.checked) {
+      var sub = {topic: checks[i].label, details: []};
+      for (var j = 0; j < checks[i].detail.length; j++) {
+        var del = document.getElementById(checks[i].detail[j].id);
+        if (del && del.checked) sub.details.push(checks[i].detail[j].label);
+      }
+      subs.push(sub);
+    }
+  }
+  var notes = document.getElementById('fsub-notes') ? document.getElementById('fsub-notes').value.trim() : '';
+  return {subs: subs, notes: notes};
+}
+
+function resetFightSubs() {
+  var el = document.getElementById('bad-fight');
+  if (el) el.checked = false;
+  var subs = document.getElementById('fight-subs');
+  if (subs) subs.style.display = 'none';
+  var allChecks = document.querySelectorAll('#fight-subs input[type=checkbox]');
+  for (var i = 0; i < allChecks.length; i++) allChecks[i].checked = false;
+  var allDetails = document.querySelectorAll('#fight-subs .fight-detail');
+  for (var i = 0; i < allDetails.length; i++) allDetails[i].style.display = 'none';
+  var notesEl = document.getElementById('fsub-notes');
+  if (notesEl) notesEl.value = '';
+}
+
+function setFightData(fightData) {
+  if (!fightData) return;
+  var el = document.getElementById('bad-fight');
+  if (el) { el.checked = true; toggleFightSubs(); }
+  var topicMap = {
+    'Kids':'fsub-kids','Not a priority':'fsub-priority','Work':'fsub-work',
+    'Jealousy':'fsub-jealousy','Grooming / Dressing':'fsub-grooming',
+    'Parenting':'fsub-parenting','Where we sleep':'fsub-sleep',
+    'Vacation':'fsub-vacation','Money':'fsub-money',
+    'How we act in front of kids':'fsub-kids-behavior'
+  };
+  var detailMap = {
+    "Larry's kids":'fsub-kids-larry',"Liz's kids":'fsub-kids-liz',
+    'Larry feels it (priority)':'fsub-priority-larry','Liz feels it (priority)':'fsub-priority-liz',
+    "Larry doesn't feel like a priority":'fsub-priority-larry',"Liz doesn't feel like a priority":'fsub-priority-liz',
+    'Larry feels it':'fsub-jealousy-larry','Liz feels it':'fsub-jealousy-liz',
+    'Larry complaining about Liz':'fsub-grooming-larry','Liz complaining about Larry':'fsub-grooming-liz',
+    "How Larry parents":'fsub-parenting-larry',"How Liz parents":'fsub-parenting-liz',
+    "Larry's parenting":'fsub-parenting-larry',"Liz's parenting":'fsub-parenting-liz',
+    "Larry's house":'fsub-sleep-larry',"Liz's house":'fsub-sleep-liz',
+    'Larry acts bad':'fsub-kb-larry','Liz acts bad':'fsub-kb-liz'
+  };
+  if (fightData.subs) {
+    for (var i = 0; i < fightData.subs.length; i++) {
+      var s = fightData.subs[i];
+      var tid = topicMap[s.topic];
+      if (tid) { var tel = document.getElementById(tid); if (tel) { tel.checked = true; toggleSub(tid.replace('fsub-','')+'-detail'); } }
+      for (var j = 0; j < s.details.length; j++) {
+        var did = detailMap[s.details[j]];
+        if (did) { var del = document.getElementById(did); if (del) del.checked = true; }
+      }
+    }
+  }
+  if (fightData.notes) { var n = document.getElementById('fsub-notes'); if (n) n.value = fightData.notes; }
+}
+
+function buildCheckboxes(containerId, opts, prefix) {
+  var cHtml = '';
+  for (var i = 0; i < opts.length; i++) {
+    cHtml += '<label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#e6edf3;cursor:pointer;padding:4px 0">' +
+      '<input type="checkbox" id="' + prefix + '_' + i + '" style="accent-color:#58a6ff;width:16px;height:16px;flex-shrink:0"> ' +
+      opts[i] + '</label>';
+  }
+  document.getElementById(containerId).innerHTML = cHtml;
+}
+
+function getChecked(opts, prefix) {
+  var result = [];
+  for (var i = 0; i < opts.length; i++) {
+    var el = document.getElementById(prefix + '_' + i);
+    if (el && el.checked) result.push(opts[i]);
+  }
+  return result;
+}
+
+function setChecked(opts, prefix, selected) {
+  for (var i = 0; i < opts.length; i++) {
+    var el = document.getElementById(prefix + '_' + i);
+    if (el) el.checked = selected.indexOf(opts[i]) !== -1;
+  }
+}
+
+function resetChecked(opts, prefix) {
+  for (var i = 0; i < opts.length; i++) {
+    var el = document.getElementById(prefix + '_' + i);
+    if (el) el.checked = false;
+  }
+}
+try { notes = JSON.parse(localStorage.getItem('together_notes') || '[]'); } catch(e) {}
+var editNoteId = null;
+
+function saveNotes() { localStorage.setItem('together_notes', JSON.stringify(notes)); }
+
+function saveNoteFromLog() {
+  var title = '';
+  var body  = document.getElementById('log-note-body').value.trim();
+  if (!title && !body) { toast('Enter a title or details'); return; }
+  notes.unshift({ id: Date.now(), title: title, body: body, date: today() });
+  saveNotes(); toast('Note saved');
+  document.getElementById('log-note-body').value = '';
+  renderNotes();
+}
+
+function saveNote() {
+  var title = document.getElementById('note-title').value.trim();
+  var body  = document.getElementById('note-body').value.trim();
+  if (!title && !body) { toast('Enter a title or details'); return; }
+  notes.unshift({ id: Date.now(), title: title, body: body, date: today() });
+  saveNotes(); toast('Note saved');
+  document.getElementById('note-title').value = '';
+  document.getElementById('note-body').value  = '';
+  renderNotes();
+}
+
+function openEditNote(id) {
+  var n = null;
+  for (var i = 0; i < notes.length; i++) { if (notes[i].id === id) { n = notes[i]; break; } }
+  if (!n) return;
+  editNoteId = id;
+  document.getElementById('en-title').value = n.title || '';
+  document.getElementById('en-body').value  = n.body  || '';
+  document.getElementById('edit-note-modal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditNote() {
+  document.getElementById('edit-note-modal').style.display = 'none';
+  document.body.style.overflow = ''; editNoteId = null;
+}
+
+function saveEditNote() {
+  if (!editNoteId) return;
+  for (var i = 0; i < notes.length; i++) {
+    if (notes[i].id === editNoteId) {
+      notes[i].title = document.getElementById('en-title').value.trim();
+      notes[i].body  = document.getElementById('en-body').value.trim();
+      break;
+    }
+  }
+  saveNotes(); toast('Updated'); closeEditNote(); renderNotes();
+}
+
+function delNote() {
+  if (!editNoteId) return;
+  if (!confirm('Delete this note?')) return;
+  notes = notes.filter(function(n){ return n.id !== editNoteId; });
+  saveNotes(); toast('Deleted'); closeEditNote(); renderNotes();
+}
+
+function renderNotes() {
+  var el = document.getElementById('notes-list');
+  if (!el) return;
+  if (!notes.length) { el.innerHTML = '<div style="text-align:center;padding:30px;color:#58a6ff;opacity:.5">No notes yet. Add areas of concern above.</div>'; return; }
+  var nHtml = '';
+  for (var i = 0; i < notes.length; i++) {
+    var n = notes[i];
+    html += '<div class="card" style="margin-bottom:10px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">' +
+      '<div style="font-size:15px;font-weight:700;color:#58a6ff">' + (n.title || 'Untitled') + '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px">' +
+      '<div style="font-size:11px;color:#58a6ff;opacity:.5">' + n.date + '</div>' +
+      '<button onclick="openEditNote(' + n.id + ')" style="padding:4px 10px;background:#1c2128;border:1px solid #30363d;color:#58a6ff;border-radius:5px;font-size:12px;cursor:pointer;font-family:inherit">&#9999;&#65039; Edit</button>' +
+      '</div></div>' +
+      (n.body ? '<div style="font-size:14px;color:#e6edf3;line-height:1.6;white-space:pre-wrap">' + n.body + '</div>' : '') +
+      '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function renderTrends(filtered) {
+  var data = filtered || entries;
+  var weekData = {};
+  for (var i = 0; i < data.length; i++) {
+    var e = data[i];
+    if (!e.rating) continue;
+    var d = new Date(e.date + 'T12:00:00');
+    var weekStart = new Date(d);
+    weekStart.setDate(d.getDate() - d.getDay());
+    var key = weekStart.toISOString().split('T')[0];
+    if (!weekData[key]) weekData[key] = [];
+    weekData[key].push(e.rating);
+  }
+  var weeks = Object.keys(weekData).sort().slice(-10);
+
+  if (weeks.length < 2) {
+    document.getElementById('trends-card').style.display = 'none';
+    return;
+  }
+  document.getElementById('trends-card').style.display = 'block';
+
+  var labels = [], avgs = [];
+  for (var i = 0; i < weeks.length; i++) {
+    var wk = weekData[weeks[i]];
+    var avg = wk.reduce(function(a,b){return a+b;},0) / wk.length;
+    labels.push(new Date(weeks[i] + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+    avgs.push(Math.round(avg * 10) / 10);
+  }
+
+  var first3 = avgs.slice(0, Math.min(3, avgs.length));
+  var last3  = avgs.slice(-Math.min(3, avgs.length));
+  var f3avg  = first3.reduce(function(a,b){return a+b;},0)/first3.length;
+  var l3avg  = last3.reduce(function(a,b){return a+b;},0)/last3.length;
+  var diff   = l3avg - f3avg;
+  var verdict = '';
+  if (diff >= 1)       verdict = '<span style="color:#3fb950;font-weight:700">&#128200; Trending up +' + diff.toFixed(1) + ' pts</span> — things are improving';
+  else if (diff <= -1) verdict = '<span style="color:#f85149;font-weight:700">&#128201; Trending down ' + diff.toFixed(1) + ' pts</span> — worth paying attention to';
+  else                 verdict = '<span style="color:#58a6ff;font-weight:700">&#8594; Holding steady</span> — relatively consistent';
+  document.getElementById('trend-verdict').innerHTML = verdict;
+
+  var ctx = document.getElementById('rating-trend-chart');
+  if (ratingTrendChart) { ratingTrendChart.destroy(); ratingTrendChart = null; }
+  ratingTrendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: avgs,
+        borderColor: '#58a6ff', borderWidth: 2.5,
+        pointRadius: 5, pointBackgroundColor: avgs.map(function(v){
+          return v >= 7 ? '#3fb950' : v >= 5 ? '#58a6ff' : '#f85149';
+        }),
+        tension: 0.3, fill: true,
+        backgroundColor: 'rgba(88,166,255,.08)'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c){ return 'Avg: ' + c.raw + '/10'; }}}},
+      scales: {
+        x: { ticks: { color:'#58a6ff', font:{size:11} }, grid: { color:'rgba(88,166,255,.06)' } },
+        y: { min:1, max:10, ticks: { color:'#58a6ff', font:{size:11}, stepSize:1 }, grid: { color:'rgba(88,166,255,.06)' },
+             title: { display:true, text:'Avg Rating', color:'#58a6ff', font:{size:10} } }
+      }
+    }
+  });
+}
+
+function renderReasons(filtered) {
+  var data = filtered || entries;
+  var goodCount = {}, badCount = {};
+  var total = data.length;
+  for (var i = 0; i < data.length; i++) {
+    var e = data[i];
+    if (e.good) { for (var j = 0; j < e.good.length; j++) { goodCount[e.good[j]] = (goodCount[e.good[j]] || 0) + 1; } }
+    if (e.bad)  { for (var j = 0; j < e.bad.length;  j++) { badCount[e.bad[j]]   = (badCount[e.bad[j]]   || 0) + 1; } }
+  }
+
+  var hasGood = Object.keys(goodCount).length > 0;
+  var hasBad  = Object.keys(badCount).length  > 0;
+  if (!hasGood && !hasBad) { document.getElementById('reasons-card').style.display = 'none'; return; }
+  document.getElementById('reasons-card').style.display = 'none';
+
+  function makeReasonList(counts) {
+    var sorted = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; }).slice(0,5);
+    if (!sorted.length) return '<div style="color:#58a6ff;opacity:.4;font-size:12px">None logged yet</div>';
+    var max = counts[sorted[0]];
+    return sorted.map(function(r) {
+      var pct = total ? Math.round(counts[r]/total*100) : 0;
+      var barW = Math.round(counts[r]/max*100);
+      var isGood = goodCount[r] !== undefined;
+      var color = isGood ? '#3fb950' : '#f85149';
+      return '<div style="margin-bottom:10px">' +
+        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">' +
+        '<span style="color:#e6edf3;font-size:11px">' + r + '</span>' +
+        '<span style="color:' + color + ';font-weight:700;font-size:12px;white-space:nowrap;margin-left:6px">' + counts[r] + 'x (' + pct + '%)</span></div>' +
+        '<div style="height:5px;border-radius:3px;background:#21262d;overflow:hidden">' +
+        '<div style="width:' + barW + '%;height:100%;background:' + color + ';border-radius:3px;transition:width .4s"></div></div></div>';
+    }).join('');
+  }
+
+  document.getElementById('good-reasons').innerHTML = makeReasonList(goodCount);
+  document.getElementById('bad-reasons').innerHTML  = makeReasonList(badCount);
+}
+
+function renderAll() { renderSummary(); renderChart(); renderHistory(); }
+
+function getFiltered() {
+  var now = new Date();
+  var todayStr = today();
+  if (period === 'week') {
+    var start = new Date(now); start.setDate(now.getDate() - now.getDay());
+    var s0 = start.toISOString().split('T')[0];
+    return entries.filter(function(e){ return e.date >= s0 && e.date <= todayStr; });
+  } else if (period === 'month') {
+    var s0 = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-01';
+    return entries.filter(function(e){ return e.date >= s0 && e.date <= todayStr; });
+  } else if (period === 'year') {
+    var s0 = now.getFullYear() + '-01-01';
+    return entries.filter(function(e){ return e.date >= s0 && e.date <= todayStr; });
+  }
+  return entries.slice();
+}
+</script>
+</body>
+</html>
