@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ZZZ Sleep Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sleep Tracker">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d1117;color:#e6edf3;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;font-size:18px}
+a{color:#58a6ff}
+
+/* NAV */
+.nav{background:#161b22;border-bottom:1px solid #21262d;display:flex;align-items:center;overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:100;padding:0 12px}
+.nav::-webkit-scrollbar{display:none}
+.nav-brand{font-size:17px;font-weight:700;padding:13px 12px 13px 0;border-right:1px solid #21262d;margin-right:6px;white-space:nowrap;flex-shrink:0}
+.nav-tab{padding:13px 12px;font-size:15px;font-weight:600;color:#58a6ff;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;flex-shrink:0}
+.nav-tab.active{color:#58a6ff;border-bottom-color:#58a6ff}
+.nav-gear{margin-left:auto;padding:13px 8px;cursor:pointer;font-size:16px;flex-shrink:0}
+
+/* PAGES */
+.page{display:none;padding:16px 14px;max-width:860px;margin:0 auto}
+.page.active{display:block}
+
+/* CARDS */
+.card{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:14px;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#58a6ff;border-bottom:1px solid #21262d;padding-bottom:8px;margin-bottom:12px}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px}
+
+/* FORM */
+.flabel{display:block;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#58a6ff;margin-bottom:5px}
+input,select,textarea{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-family:inherit;font-size:16px;padding:9px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#58a6ff}
+select option{background:#161b22}
+
+/* CHECKBOX / RADIO */
+.crow{display:flex;align-items:center;gap:8px;font-size:16px;color:#e6edf3;cursor:pointer;margin-bottom:6px;user-select:none}
+.crow input{accent-color:#58a6ff;width:15px;height:15px;flex-shrink:0;cursor:pointer}
+.rgroup{display:flex;gap:12px;flex-wrap:wrap}
+.rgroup label{display:flex;align-items:center;gap:5px;font-size:16px;cursor:pointer}
+.rgroup input{accent-color:#58a6ff;width:14px;height:14px}
+
+/* BUTTONS */
+.btn-save{width:100%;padding:12px;background:#238636;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;margin-top:4px}
+.btn-save:hover{background:#2ea043}
+.btn-save:disabled{opacity:.6;cursor:not-allowed}
+
+/* INFO BOX */
+.ibox{background:#1c2128;border:1px solid #30363d;border-radius:6px;padding:8px 11px;font-size:14px;color:#e6edf3;margin:6px 0}
+.ibox strong{color:#e6edf3}
+
+/* METRICS */
+.mrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.metric{background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:12px 14px}
+.mlabel{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#58a6ff;margin-bottom:4px}
+.mval{font-size:22px;font-weight:700;font-family:monospace;color:#58a6ff}
+.quickrow{display:flex;gap:6px;margin-bottom:14px}
+.qbox{flex:1;min-width:0;background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:8px 2px;text-align:center}
+.qlabel{font-size:11px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:#79c0ff;opacity:1;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qval{font-size:19px;font-weight:700;font-family:monospace}
+.qval-big{font-size:29px}
+.qscore{font-size:14px;font-weight:700;font-family:monospace;margin-top:4px}
+.qsub{font-size:9px;color:#58a6ff;opacity:.55;margin-top:2px}
+.msub{font-size:14px;color:#58a6ff;margin-top:2px}
+
+/* ENTRIES */
+.entry{background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:11px 13px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.e-left{flex:1;min-width:0}
+.e-date{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#58a6ff;margin-bottom:2px}
+.e-main{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.e-meta{font-size:14px;color:#58a6ff;margin-top:3px}
+.e-score{font-size:22px;font-weight:700;font-family:monospace;color:#58a6ff;text-align:right}
+.e-slabel{font-size:13px;color:#58a6ff;text-align:right;text-transform:uppercase}
+
+/* CORR */
+.cbar{height:7px;border-radius:3px;background:#21262d;overflow:hidden;position:relative;margin:5px 0}
+.cfill{height:100%;border-radius:3px;position:absolute;top:0}
+.corr-row{background:#1c2128;border:1px solid #30363d;border-radius:10px;padding:12px;margin-bottom:10px}
+.trend-btn{flex:1;padding:8px;background:#1c2128;border:1px solid #30363d;border-radius:6px;color:#8b949e;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+.trend-btn.active{background:rgba(88,166,255,.15);border-color:#58a6ff;color:#58a6ff}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #21262d;border-radius:8px}
+.tablewrap table{border-collapse:collapse;width:100%;min-width:560px;font-size:12px}
+.tablewrap th{background:#161b22;color:#58a6ff;text-transform:uppercase;font-size:10px;letter-spacing:.05em;padding:8px 10px;text-align:left;white-space:nowrap;border-bottom:1px solid #30363d}
+.tablewrap th.metric,.tablewrap th.type{padding-right:2px}
+.tablewrap th.type{padding-left:2px}
+.tablewrap td{padding:8px 10px;border-bottom:none;white-space:nowrap;font-family:monospace;color:#e6edf3}
+.tablewrap tr:last-child td{border-bottom:none}
+.tablewrap td.metric{font-family:-apple-system,sans-serif;white-space:normal;min-width:0;color:#f0f6fc;padding-right:2px}
+.tablewrap td.type{padding-left:2px;padding-right:16px}
+.tablewrap td.dim{color:#8b949e}
+/* Compact variant: used for Sleep Summary's 4-5-column tables so they fit on screen without scrolling */
+.tablewrap.compact table{min-width:0;font-size:13px;table-layout:fixed}
+.tablewrap.compact th{color:#f0f6fc;text-align:center;padding:9px 4px}
+.tablewrap.compact th.metric{width:88px;min-width:88px;text-align:left;padding-left:8px}
+.tablewrap.compact td{text-align:center;font-weight:700;padding:9px 4px}
+.tablewrap.compact td.metric{text-align:left;padding-left:8px;font-size:12px;line-height:1.25;min-width:0}
+.badge-sig{font-size:10px;padding:2px 6px;border-radius:10px;background:rgba(88,166,255,.15);color:#58a6ff;font-weight:600}
+
+/* EMPTY */
+.empty{text-align:center;padding:50px 20px;color:#58a6ff}
+.empty-icon{font-size:36px;margin-bottom:10px}
+
+/* SETTINGS PANEL */
+.settings-panel{background:#161b22;border-bottom:1px solid #21262d;padding:14px;display:none}
+.settings-panel.open{display:block}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;white-space:nowrap}
+
+/* MED DETAIL */
+.med-detail{padding-left:22px;margin-top:6px;border-left:2px solid #21262d}
+.see-more{font-size:15px;color:#58a6ff;cursor:pointer;padding:6px 0;display:inline-block}
+.rating-btn{padding:7px 2px;border:1px solid #30363d;border-radius:5px;background:#0d1117;color:#7d8590;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
+.rating-btn.on{border-color:#58a6ff;background:rgba(88,166,255,.15);color:#58a6ff}
+
+/* SECTION LABEL */
+.section-lbl{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#58a6ff;border-bottom:1px solid #21262d;padding-bottom:6px;margin:0 0 12px}
+
+@media(max-width:500px){
+  .g2{grid-template-columns:1fr}
+  .g4{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-brand">ZZZ Sleep Tracker</div>
+  <div class="nav-tab active" onclick="showPage('log',this)">📝 Log</div>
+  <div class="nav-tab" onclick="showPage('data',this)">✏️ Change an Entry</div>
+  <div class="nav-tab" onclick="showPage('summary',this)">📊 Sleep Summary</div>
+  <div class="nav-tab" onclick="showPage('lifestyle',this)">🌙 Lifestyle Summary</div>
+  <div class="nav-tab" onclick="showPage('corr',this)">🔗 Correlations</div>
+  <div class="nav-tab" onclick="showPage('med',this)">💊 Med Timing</div>
+  <div class="nav-gear" onclick="toggleSettings()">⚙️</div>
+</div>
+
+<div class="settings-panel" id="settings-panel">
+  <div class="card-title">Google Sheets Sync</div>
+  <div class="g2" style="margin-bottom:10px">
+    <div>
+      <label class="flabel">Spreadsheet ID</label>
+      <input type="text" id="gs-sheet-id" placeholder="From sheet URL" oninput="saveGS()">
+      <div style="font-size:13px;color:#58a6ff;margin-top:4px">From URL: /spreadsheets/d/<strong>ID</strong>/edit</div>
+    </div>
+    <div>
+      <label class="flabel">Access Token</label>
+      <input type="text" id="gs-token" placeholder="OAuth2 token" oninput="saveGS()">
+    </div>
+  </div>
+  <div id="sync-status" style="font-size:15px;color:#58a6ff"></div>
+  <div class="ibox" style="margin-top:8px">Data always saves locally. Google Sheets is a silent backup — you never need to open it.</div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ══ LOG PAGE ══ -->
+<div class="page active" id="page-log">
+
+  <!-- DATE AT TOP -->
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="flex:1">
+        <label class="flabel">Sleep Night</label>
+        <input type="date" id="f-date">
+      </div>
+    </div>
+    <div class="ibox" style="margin-top:8px">📅 Sleep night = when your day <strong>started</strong> (5:00 AM). Times 12:00 AM–4:59 AM belong to this entry.</div>
+  </div>
+
+  <!-- LIFESTYLE CARD -->
+  <div class="card">
+    <div class="section-lbl" style="color:#58a6ff;font-size:18px">Lifestyle</div>
+    <div class="g2" style="margin-bottom:10px;align-items:center">
+      <label class="crow"><input type="checkbox" id="f-exercised"> Exercised today</label>
+      <div>
+        <div style="font-size:14px;color:#58a6ff;margin-bottom:5px">Stress</div>
+        <div style="display:flex;gap:10px">
+          <label class="crow" style="margin:0"><input type="radio" name="stress" value="Low"> <span style="color:#90ee90">Low</span></label>
+          <label class="crow" style="margin:0"><input type="radio" name="stress" value="Med"> <span style="color:#f0883e">Med</span></label>
+          <label class="crow" style="margin:0"><input type="radio" name="stress" value="High"> <span style="color:#f85149">High</span></label>
+        </div>
+      </div>
+    </div>
+    <div id="ex-detail" style="display:none;margin-bottom:10px">
+      <label class="flabel">Exercise Intensity</label>
+      <select id="f-ex-intensity"><option>Light</option><option selected>Moderate</option><option>Intense</option></select>
+    </div>
+    <div class="g2" style="margin-bottom:10px">
+      <label class="crow"><input type="checkbox" id="f-worked-late"> Worked past 9 PM</label>
+      <label class="crow"><input type="checkbox" id="f-high-burn"> Burned 3,000+ calories</label>
+    </div>
+    <div class="g2" style="margin-bottom:10px">
+      <label class="crow"><input type="checkbox" id="f-had-sex"> Had sex</label>
+      <label class="crow"><input type="checkbox" id="f-late-meal"> Late night meal</label>
+    </div>
+    <div class="g2" style="margin-bottom:10px">
+      <div>
+        <div style="font-size:14px;color:#58a6ff;margin-bottom:6px">Where did you sleep?</div>
+        <div class="rgroup">
+          <label><input type="radio" name="location" value="Home"> Home</label>
+          <label><input type="radio" name="location" value="Elizabeth's"> Elizabeth's</label>
+          <label><input type="radio" name="location" value="Hotel"> Hotel</label>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:14px;color:#58a6ff;margin-bottom:6px">Slept with?</div>
+        <div class="rgroup">
+          <label><input type="radio" name="slepton" value="Alone"> Alone</label>
+          <label><input type="radio" name="slepton" value="Elizabeth"> Elizabeth</label>
+        </div>
+      </div>
+    </div>
+    <div class="g2">
+      <div>
+        <label class="flabel">One-off events</label>
+        <input type="text" id="f-events" placeholder="travel, illness…">
+      </div>
+      <div>
+        <label class="flabel">Notes</label>
+        <textarea id="f-notes" rows="2" style="resize:vertical"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEDS -->
+  <div class="card">
+    <div class="card-title">Medications / Supplements</div>
+    <div id="meds-visible"></div>
+    <span class="see-more" id="see-more-btn" onclick="toggleMoreMeds()">See more</span>
+    <div id="meds-hidden" style="display:none"></div>
+  </div>
+
+  <!-- SLEEP INFO AT BOTTOM -->
+  <div class="card">
+    <div class="card-title">Sleep Info</div>
+    <div class="g2" style="margin-bottom:12px">
+      <div>
+        <label class="flabel">Bedtime</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <div><label class="flabel">Hr</label><select id="f-hr"></select></div>
+          <div><label class="flabel">Min</label><select id="f-min"></select></div>
+          <div><label class="flabel">AM/PM</label><select id="f-ampm"><option value="">--</option><option>AM</option><option>PM</option></select></div>
+        </div>
+      </div>
+      <div>
+        <div class="g2">
+          <div>
+            <label class="flabel">Duration</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <div><label class="flabel">Hrs</label><input type="number" id="f-dur-hr" min="0" max="24" step="1"></div>
+              <div><label class="flabel">Mins</label><input type="number" id="f-dur-min" min="0" max="59" step="1"></div>
+            </div>
+          </div>
+          <div><label class="flabel">Sleep Score (Fitbit)</label><input type="number" id="f-score" placeholder="Enter score" min="0" max="100"></div>
+        </div>
+        <div class="g2" style="margin-top:12px">
+          <div><label class="flabel">REM Sleep (min)</label><input type="number" id="f-rem" placeholder="e.g. 95" min="0" max="600"></div>
+          <div><label class="flabel">Deep Sleep (min)</label><input type="number" id="f-deep" placeholder="e.g. 65" min="0" max="600"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-save" id="save-btn" onclick="saveEntry()">💾 Save Entry</button>
+</div>
+
+<!-- ══ DATA PAGE ══ -->
+<div class="page" id="page-data">
+  <div class="mrow" id="data-metrics"></div>
+  <div class="card">
+    <div class="card-title">Recent Entries</div>
+    <div id="entries-list"></div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="edit-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:200;overflow-y:auto">
+  <div style="background:#161b22;border:1px solid #21262d;border-radius:10px;margin:20px 14px;padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:16px;font-weight:700;color:#58a6ff">Edit Entry</div>
+      <div onclick="closeEdit()" style="font-size:20px;cursor:pointer;color:#7d8590">✕</div>
+    </div>
+    <div style="margin-bottom:10px"><label class="flabel">Sleep Date</label><input type="date" id="e-date"></div>
+    <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+      <label class="flabel" style="margin-bottom:0">Bedtime</label>
+      <button onclick="document.getElementById('e-hr').value='';document.getElementById('e-min').value='';document.getElementById('e-ampm').value='';" style="font-size:12px;padding:3px 8px;background:transparent;border:1px solid #30363d;color:#58a6ff;border-radius:5px;cursor:pointer;font-family:inherit">Clear</button>
+    </div>
+    <div class="g3" style="margin-bottom:10px">
+      <div><label class="flabel">Hr</label><select id="e-hr"></select></div>
+      <div><label class="flabel">Min</label><select id="e-min"></select></div>
+      <div><label class="flabel">AM/PM</label><select id="e-ampm"><option value="">--</option><option>AM</option><option>PM</option></select></div>
+    </div>
+    <div class="g2" style="margin-bottom:10px">
+      <div>
+        <label class="flabel">Duration</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div><label class="flabel">Hrs</label><input type="number" id="e-dur-hr" min="0" max="24" step="1"></div>
+          <div><label class="flabel">Mins</label><input type="number" id="e-dur-min" min="0" max="59" step="1"></div>
+        </div>
+      </div>
+      <div><label class="flabel">Sleep Score</label><input type="number" id="e-score" min="0" max="100"></div>
+    </div>
+    <div class="g2" style="margin-bottom:10px">
+      <div><label class="flabel">REM Sleep (min)</label><input type="number" id="e-rem" min="0" max="600"></div>
+      <div><label class="flabel">Deep Sleep (min)</label><input type="number" id="e-deep" min="0" max="600"></div>
+    </div>
+    <div class="g2" style="margin-bottom:10px">
+      <div>
+        <label class="flabel">Stress</label>
+        <select id="e-stress"><option>Low</option><option>Med</option><option>High</option></select>
+      </div>
+      <div>
+        <label class="flabel">Location</label>
+        <select id="e-location"><option>Home</option><option>Elizabeth's</option><option>Hotel</option></select>
+      </div>
+    </div>
+    <div class="g2" style="margin-bottom:10px">
+      <div>
+        <label class="flabel">Slept with</label>
+        <select id="e-slepton"><option>Alone</option><option>Elizabeth</option></select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding-top:20px">
+        <label class="crow"><input type="checkbox" id="e-exercised"> Exercised</label>
+        <label class="crow"><input type="checkbox" id="e-worked-late"> Worked past 9 PM</label>
+        <label class="crow"><input type="checkbox" id="e-high-burn"> Burned 3000+ cal</label>
+        <label class="crow"><input type="checkbox" id="e-had-sex"> Had sex</label>
+        <label class="crow"><input type="checkbox" id="e-late-meal"> Late night meal</label>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div class="flabel">Medications</div>
+      <div id="e-meds-rows"></div>
+    </div>
+    <div style="margin-bottom:10px"><label class="flabel">Events</label><input type="text" id="e-events"></div>
+    <div style="margin-bottom:14px"><label class="flabel">Notes</label><textarea id="e-notes" rows="2" style="resize:vertical"></textarea></div>
+    <button class="btn-save" onclick="saveEdit()">💾 Save Changes</button>
+    <button onclick="deleteEntry()" style="width:100%;margin-top:8px;padding:10px;background:transparent;border:1px solid #f85149;color:#f85149;border-radius:7px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">🗑 Delete Entry</button>
+  </div>
+</div>
+
+<!-- ══ CORR PAGE ══ -->
+<!-- ══ SUMMARY PAGE ══ -->
+<div class="page" id="page-summary">
+  <div id="summary-content"></div>
+</div>
+
+<div class="page" id="page-lifestyle">
+  <div id="lifestyle-content"></div>
+</div>
+
+<div class="page" id="page-corr">
+  <div style="margin-bottom:14px">
+    <label class="flabel">Outcome to analyze</label>
+    <select id="corr-target" onchange="renderCorr()" style="max-width:280px">
+      <option value="score">Sleep Score</option>
+      <option value="duration" selected>Sleep Duration</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="card-title">Correlations</div>
+    <div id="corr-results"></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="card-title">Location × Company Breakdown</div>
+    <div id="combo-results"></div>
+  </div>
+</div>
+
+<!-- ══ MED TIMING PAGE ══ -->
+<div class="page" id="page-med">
+  <div style="margin-bottom:14px">
+    <label class="flabel">Medication</label>
+    <select id="med-select" onchange="renderMed()" style="max-width:280px"></select>
+  </div>
+  <div class="mrow" id="med-metrics"></div>
+  <div class="g2" id="med-early-late" style="margin-bottom:14px"></div>
+  <div style="position:relative;width:100%;height:260px">
+    <canvas id="med-chart" role="img" aria-label="Med timing scatter chart"></canvas>
+  </div>
+  <div class="ibox" style="margin-top:10px" id="med-info"></div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const PRESET_MEDS=[
+  {name:"Vitamin A",   dose:20,  unit:"mg"},
+  {name:"Vitamin K",   dose:100, unit:"mg"},
+  {name:"Unisom",      dose:50,  unit:"mg"},
+  {name:"Ambien",      dose:10,  unit:"mg"},
+  {name:"Vitamin B12", dose:1000,unit:"mcg"},
+  {name:"Magnesium",   dose:400, unit:"mg"},
+  {name:"Magnesium Glyconate",dose:400,unit:"mg"},
+  {name:"Magnesium Threonate",dose:2000,unit:"mg"},
+  {name:"Vitamin C",   dose:500, unit:"mg"},
+  {name:"L-Arginine",  dose:3000,unit:"mg"},
+  {name:"L-Carnitine", dose:1800,unit:"mg"},
+  {name:"Vitamin T",   dose:50,  unit:"mg"},
+  {name:"Vitamin G",   dose:600, unit:"mg"},
+];
+
+const TIME_SLOTS=[
+  {label:"12:00 AM - 4:59 AM",mid:24},
+  {label:"5:00 AM - 11:59 AM",mid:5},
+  {label:"12:00 PM - 4:59 PM",mid:12},
+  {label:"5:00 PM - 11:59 PM",mid:17},
+];
+
+let entries=[];
+try{entries=JSON.parse(localStorage.getItem("sleep_v2")||"[]");}catch{}
+let gsConfig={sheetId:"",token:""};
+try{gsConfig=JSON.parse(localStorage.getItem("sleep_gs")||'{"sheetId":"","token":""}');}catch{}
+
+let corrChart=null,medChart=null,trendChart=null,lifeTrendChart=null;
+let trendGranularity='weekly';
+let trendMetric='duration';
+let lifeTrendGranularity='weekly',lifeTrendGroup='sleep';
+let showMoreMeds=false;
+const VISIBLE_COUNT=4;
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(function init(){
+  // Date
+  const yest=new Date();yest.setDate(yest.getDate()-1);document.getElementById("f-date").value=yest.toISOString().split("T")[0];
+
+  // Hr dropdown
+  const hrSel=document.getElementById("f-hr");
+  const blankHr=document.createElement("option");blankHr.value="";blankHr.textContent="Hr";hrSel.appendChild(blankHr);
+  for(let h=1;h<=12;h++){const o=document.createElement("option");o.value=h;o.textContent=h;hrSel.appendChild(o);}
+
+  // Min dropdown
+  const mnSel=document.getElementById("f-min");
+  const blankMn=document.createElement("option");blankMn.value="";blankMn.textContent="Min";mnSel.appendChild(blankMn);
+  ["00","05","10","15","20","25","30","35","40","45","50","55"].forEach(m=>{
+    const o=document.createElement("option");o.value=m;o.textContent=m;mnSel.appendChild(o);
+  });
+
+  // Exercise toggle
+  document.getElementById("f-exercised").addEventListener("change",function(){
+    document.getElementById("ex-detail").style.display=this.checked?"block":"none";
+  });
+
+  // Build med rows
+  buildMedRows();
+  // Build rating buttons
+
+  // GS settings
+  document.getElementById("gs-sheet-id").value=gsConfig.sheetId||"";
+  document.getElementById("gs-token").value=gsConfig.token||"";
+})();
+
+function today(){return new Date().toISOString().split("T")[0];}
+
+// ── MEDS ──────────────────────────────────────────────────────────────────────
+function buildMedRows(){
+  const vis=document.getElementById("meds-visible");
+  const hid=document.getElementById("meds-hidden");
+  vis.innerHTML="";hid.innerHTML="";
+  PRESET_MEDS.forEach((med,idx)=>{
+    const el=buildMedRow(med);
+    if(idx<VISIBLE_COUNT)vis.appendChild(el);
+    else hid.appendChild(el);
+  });
+}
+
+function hrOptionsHTML(sel){
+  return`<option value="">Hr</option>`+Array.from({length:12},(_,i)=>i+1)
+    .map(h=>`<option value="${h}"${String(h)===String(sel)?" selected":""}>${h}</option>`).join("");
+}
+function minOptionsHTML(sel){
+  return`<option value="">Min</option>`+["00","05","10","15","20","25","30","35","40","45","50","55"]
+    .map(m=>`<option value="${m}"${m===sel?" selected":""}>${m}</option>`).join("");
+}
+function ampmOptionsHTML(sel){
+  return`<option value="">--</option><option${sel==="AM"?" selected":""}>AM</option><option${sel==="PM"?" selected":""}>PM</option>`;
+}
+
+function medTimeRowHTML(key, idx, doses, unit, defaultDoseIdx){
+  return`<div class="med-time-row" data-key="${key}" data-idx="${idx}" style="border:1px solid #21262d;border-radius:8px;padding:10px;margin-bottom:8px">
+    <div style="font-size:13px;color:#58a6ff;margin-bottom:6px">Dose:</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      ${doses.map((d,i)=>`<label class="crow" style="margin:0">
+        <input type="radio" name="dose_${key}_${idx}" value="${d}${unit}" ${i===defaultDoseIdx?"checked":""}>
+        <span style="font-size:15px">${d}${unit}</span>
+      </label>`).join("")}
+    </div>
+    <div style="font-size:13px;color:#58a6ff;margin-bottom:6px">Time taken:</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+      <select id="hr_${key}_${idx}">${hrOptionsHTML()}</select>
+      <select id="min_${key}_${idx}">${minOptionsHTML()}</select>
+      <select id="ampm_${key}_${idx}">${ampmOptionsHTML()}</select>
+      ${idx>0?`<button type="button" onclick="removeMedTimeRow('${key}',${idx})" style="font-size:12px;padding:5px 9px;background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);color:#f85149;border-radius:6px;cursor:pointer;font-family:inherit;margin-left:auto">✕</button>`:""}
+    </div>
+    <div style="font-size:13px;color:#58a6ff;margin-bottom:6px">Doses at this time:</div>
+    <div style="display:flex;gap:8px">
+      ${[1,2,3,4].map(n=>`<label class="crow" style="margin:0;font-size:14px">
+        <input type="radio" name="count_${key}_${idx}" value="${n}" ${n===1?"checked":""}>
+        ${n}
+      </label>`).join("")}
+    </div>
+  </div>`;
+}
+
+function buildMedRow(med){
+  const half=med.dose*0.5,one5=med.dose*1.5,two=med.dose*2;
+  const doses=[half,med.dose,one5,two];
+  const key=med.name.replace(/\s+/g,"_");
+
+  const wrap=document.createElement("div");
+  wrap.style.marginBottom="10px";
+  wrap.dataset.dose=med.dose;
+  wrap.dataset.unit=med.unit;
+  wrap.innerHTML=`
+    <label class="crow">
+      <input type="checkbox" id="chk_${key}" onchange="toggleMedDetail('${key}')">
+      <strong>${med.name}</strong>
+    </label>
+    <div id="detail_${key}" class="med-detail" style="display:none">
+      <div id="times_${key}">
+        ${medTimeRowHTML(key,0,doses,med.unit,1)}
+      </div>
+      <button type="button" onclick="addMedTimeRow('${key}',${med.dose},'${med.unit}')" style="font-size:12px;padding:6px 10px;background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.3);color:#58a6ff;border-radius:6px;cursor:pointer;font-family:inherit">+ Add another time</button>
+    </div>
+  `;
+
+  return wrap;
+}
+
+function addMedTimeRow(key,defaultDose,unit){
+  const container=document.getElementById("times_"+key);
+  const idx=container.querySelectorAll(".med-time-row").length;
+  const doses=[defaultDose*0.5,defaultDose,defaultDose*1.5,defaultDose*2];
+  const div=document.createElement("div");
+  div.innerHTML=medTimeRowHTML(key,idx,doses,unit,1);
+  container.appendChild(div.firstElementChild);
+}
+
+function removeMedTimeRow(key,idx){
+  const row=document.querySelector(`#times_${key} .med-time-row[data-idx="${idx}"]`);
+  if(row)row.remove();
+}
+
+function toggleMedDetail(key){
+  const checked=document.getElementById("chk_"+key).checked;
+  document.getElementById("detail_"+key).style.display=checked?"block":"none";
+}
+
+function toggleMoreMeds(){
+  showMoreMeds=!showMoreMeds;
+  document.getElementById("meds-hidden").style.display=showMoreMeds?"block":"none";
+  document.getElementById("see-more-btn").textContent=showMoreMeds?"Show less":"See more";
+}
+
+function getMedRows(){
+  const rows=[];
+  const bedHr=getBedFloat();
+  PRESET_MEDS.forEach(med=>{
+    const key=med.name.replace(/\s+/g,"_");
+    if(!document.getElementById("chk_"+key)?.checked)return;
+    const timeRows=document.querySelectorAll(`#times_${key} .med-time-row`);
+    timeRows.forEach(row=>{
+      const idx=row.dataset.idx;
+      const dose=row.querySelector(`input[name="dose_${key}_${idx}"]:checked`)?.value||"";
+      const hrVal=document.getElementById(`hr_${key}_${idx}`)?.value;
+      const minVal=document.getElementById(`min_${key}_${idx}`)?.value||"00";
+      const ampmVal=document.getElementById(`ampm_${key}_${idx}`)?.value;
+      if(!hrVal||!ampmVal)return; // no time entered, skip this time-row
+      const count=parseInt(row.querySelector(`input[name="count_${key}_${idx}"]:checked`)?.value||"1");
+      const medFloat=(parseInt(hrVal)%12+(ampmVal==="PM"?12:0))+parseInt(minVal)/60;
+      for(let d=0;d<count;d++){
+        rows.push({name:med.name,dose,hr:hrVal,min:minVal,ampm:ampmVal,hrs:hrsBeforeBedExact(medFloat,bedHr),doseNum:d+1,totalDoses:count});
+      }
+    });
+  });
+  return rows;
+}
+
+// ── TIME HELPERS ──────────────────────────────────────────────────────────────
+// ── RATING ────────────────────────────────────────────────────────────────────
+function buildRatingBtns(){
+  var html='';
+  for(var i=1;i<=10;i++){
+    html+='<button class="rating-btn'+(i===myRating?' on':'')+'" onclick="selRating('+i+')">'+i+'</button>';
+  }
+  var rb=document.getElementById('rating-btns');if(rb)rb.innerHTML=html;
+}
+function selRating(n){myRating=n;buildRatingBtns();}
+
+function getBedFloat(){
+  const hr=parseInt(document.getElementById("f-hr").value)||11;
+  const mn=parseInt(document.getElementById("f-min").value)||0;
+  const pm=document.getElementById("f-ampm").value==="PM";
+  return(hr%12+(pm?12:0))+mn/60;
+}
+
+function adjustSD(h){return(h>=0&&h<5)?h+24:h;}
+
+// Legacy bucket-based calc, kept only in case old data ever needs to be recomputed.
+function hrsBeforeBed(mid,bedH){
+  const b=adjustSD(bedH);
+  let d=b-mid;if(d<0)d+=24;
+  return Math.round(d*10)/10;
+}
+
+// Exact-time calc: medFloat and bedH are both 24-hr decimal times (e.g. 1:30 AM = 1.5).
+// Times between 12:00–4:59 AM are pushed past midnight (+24) to match the 5 AM sleep-night cutoff.
+function hrsBeforeBedExact(medFloat,bedH){
+  const b=adjustSD(bedH);
+  const m=adjustSD(medFloat);
+  let d=b-m;if(d<0)d+=24;
+  return Math.round(d*10)/10;
+}
+
+// ── SAVE ──────────────────────────────────────────────────────────────────────
+async function saveEntry(){
+  const btn=document.getElementById("save-btn");
+  btn.disabled=true;btn.textContent="Saving…";
+
+  const entry={
+    id:Date.now(),
+    date:document.getElementById("f-date").value,
+    bedtime:`${document.getElementById("f-hr").value}:${document.getElementById("f-min").value} ${document.getElementById("f-ampm").value}`,
+    bedFloat:getBedFloat(),
+    duration:( (parseInt(document.getElementById("f-dur-hr").value)||0) + (parseInt(document.getElementById("f-dur-min").value)||0)/60 ),
+    score:parseInt(document.getElementById("f-score").value)||0,
+    rem:parseInt(document.getElementById("f-rem").value)||0,
+    deep:parseInt(document.getElementById("f-deep").value)||0,
+    exercised:document.getElementById("f-exercised").checked,
+    exIntensity:document.getElementById("f-ex-intensity").value,
+    stress:document.querySelector("input[name='stress']:checked")?.value||"Med",
+    workedLate:document.getElementById("f-worked-late").checked,
+    highBurn:document.getElementById("f-high-burn").checked,
+    hadSex:document.getElementById("f-had-sex").checked,
+    lateMeal:document.getElementById("f-late-meal").checked,
+    location:document.querySelector("input[name='location']:checked")?.value||"Home",
+    sleptWith:document.querySelector("input[name='slepton']:checked")?.value||"Alone",
+    events:document.getElementById("f-events").value,
+    notes:document.getElementById("f-notes").value,
+    meds:getMedRows(),
+    ts:new Date().toISOString()
+  };
+
+  entries.push(entry);
+  localStorage.setItem("sleep_v2",JSON.stringify(entries));
+  showToast("✓ Entry saved");
+
+  // GS sync
+  if(gsConfig.sheetId&&gsConfig.token){
+    setSyncStatus("⟳ Syncing…","#58a6ff");
+    try{
+      const row=[entry.date,entry.bedtime,entry.duration,entry.score,
+        entry.exercised?1:0,entry.exIntensity,entry.stress,
+        entry.workedLate?1:0,entry.location,entry.sleptWith,
+        entry.events,entry.notes,JSON.stringify(entry.meds)];
+      const res=await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${gsConfig.sheetId}/values/Sheet1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+        {method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+gsConfig.token},
+         body:JSON.stringify({values:[row]})}
+      );
+      setSyncStatus(res.ok?"✓ Synced":"✕ Sync failed",res.ok?"#3fb950":"#f85149");
+    }catch{setSyncStatus("✕ Sync failed","#f85149");}
+    setTimeout(()=>setSyncStatus("",""),3000);
+  }
+
+  // Reset form
+  const y2=new Date();y2.setDate(y2.getDate()-1);document.getElementById("f-date").value=y2.toISOString().split("T")[0];
+  document.getElementById("f-dur-hr").value="";
+  document.getElementById("f-dur-min").value="";
+  document.getElementById("f-hr").value="";
+  document.getElementById("f-min").value="";
+  document.getElementById("f-ampm").value="";
+  document.getElementById("f-score").value="";
+  document.getElementById("f-rem").value="";
+  document.getElementById("f-deep").value="";
+  document.getElementById("f-events").value="";
+  document.getElementById("f-notes").value="";
+  document.getElementById("f-exercised").checked=false;
+  document.getElementById("ex-detail").style.display="none";
+  document.getElementById("f-worked-late").checked=false;
+  document.getElementById("f-high-burn").checked=false;
+  document.getElementById("f-had-sex").checked=false;
+  document.getElementById("f-late-meal").checked=false;
+  // stress left blank after reset
+  document.querySelector("input[name='location'][value='Home']").checked=true;
+  document.querySelector("input[name='slepton'][value='Alone']").checked=true;
+  buildMedRows();
+  showMoreMeds=false;
+
+  btn.disabled=false;btn.textContent="💾 Save Entry";
+}
+
+// ── SHARED SUMMARY HELPERS (used by both Sleep Summary & Lifestyle Summary tabs) ──
+function pad2(n){return String(n).padStart(2,"0");}
+function localDateStr(d){return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());}
+// Sleep-night convention (matches the entry form): a "day" starts at 5:00 AM.
+// Times between 12:00 AM and 4:59 AM still belong to the previous sleep night.
+function sleepDay(d){const sd=new Date(d);if(sd.getHours()<5)sd.setDate(sd.getDate()-1);return sd;}
+function fmtDur(d){if(!d)return"—";return`${Math.floor(d)}h ${Math.round((d%1)*60)}m`;}
+function avg(arr){return arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length*10)/10:null;}
+function fmt1(v){return v==null?"—":v.toFixed(1);}
+// Shows a duration-in-minutes value as hours once it reaches 60+, otherwise as minutes.
+function fmtMin(mins){
+  if(mins==null)return"—";
+  return mins>=60?(mins/60).toFixed(1)+"h":mins.toFixed(1)+"m";
+}
+function pct(n,t){return t?Math.round(n/t*100)+"%":"—";}
+function scoreColor(s){return s==null?"#58a6ff":s>=75?"#3fb950":s>=60?"#f0883e":"#f85149";}
+function condScore(data,condFn){return avg(data.filter(condFn).filter(e=>e.score>0).map(e=>e.score));}
+function rawScore(data){return avg(data.filter(e=>e.score>0).map(e=>e.score));}
+// Compares each period's value to the NEXT (longer) period's value: green if better, red if worse.
+// The last period has nothing longer to compare to, so it falls back to an absolute threshold color.
+function seqColor(vals,i){
+  if(i<vals.length-1){
+    const a=vals[i],b=vals[i+1];
+    if(a==null||b==null)return"#58a6ff";
+    if(a>b)return"#3fb950";
+    if(a<b)return"#f85149";
+    return"#58a6ff";
+  }
+  return scoreColor(vals[i]);
+}
+const MIN_N=5; // minimum nights required before showing a conditional value
+
+// Builds the historical series of a rolling-window score (same window type/length as a given box)
+// evaluated as of every past date with data, so "today's" value can be checked against it.
+// days=0 means a single day's score (used for "Yesterday"); days="ytd" means from Jan 1 of that year.
+function historicalSeries(days,condFn){
+  const dates=[...new Set(entries.map(e=>e.date))].sort();
+  return dates.map(d=>{
+    let startDate;
+    if(days==="ytd"){
+      startDate=d.slice(0,4)+"-01-01";
+    }else if(days===0){
+      startDate=d;
+    }else{
+      const dt=new Date(d+"T12:00:00");dt.setDate(dt.getDate()-days);
+      startDate=localDateStr(dt);
+    }
+    const windowEntries=entries.filter(e=>(!condFn||condFn(e))&&e.date>=startDate&&e.date<=d);
+    return rawScore(windowEntries);
+  }).filter(v=>v!=null);
+}
+
+// Returns a small star badge if `value` ties the all-time high or low for that same rolling
+// window/condition (green=high, red=low). Needs at least 2 historical points to call a "record".
+function starBadge(value,days,condFn){
+  if(value==null)return"";
+  const series=historicalSeries(days,condFn);
+  if(series.length<2)return"";
+  const hi=Math.max(...series),lo=Math.min(...series);
+  if(value>=hi)return` <span style="color:#3fb950">★</span>`;
+  if(value<=lo)return` <span style="color:#f85149">★</span>`;
+  return"";
+}
+
+function getSummaryWindows(){
+  const now=new Date();
+  const todayStr=localDateStr(sleepDay(now));
+
+  const yest=new Date(sleepDay(now));yest.setDate(yest.getDate()-1);
+  const yData=entries.filter(e=>e.date===localDateStr(yest));
+
+  const d7=new Date(sleepDay(now));d7.setDate(d7.getDate()-7);
+  const data7=entries.filter(e=>e.date>=localDateStr(d7)&&e.date<=todayStr);
+
+  const d30=new Date(sleepDay(now));d30.setDate(d30.getDate()-30);
+  const data30=entries.filter(e=>e.date>=localDateStr(d30)&&e.date<=todayStr);
+
+  const yearStr=now.getFullYear()+"-01-01";
+  const dataYTD=entries.filter(e=>e.date>=yearStr&&e.date<=todayStr);
+
+  function windowData(days){
+    const d=new Date(sleepDay(now));d.setDate(d.getDate()-days);
+    return entries.filter(e=>e.date>=localDateStr(d)&&e.date<=todayStr);
+  }
+  const catPeriods=[windowData(30),windowData(90),windowData(180),windowData(365)];
+  const catLabels=["30-Day","90-Day","180-Day","365-Day"];
+
+  return{
+    periods:[yData,data7,data30,dataYTD],
+    periodLabels:["Yesterday","7-Day Avg","30-Day Avg","YTD"],
+    durationLabels:["Yesterday","7-Day","30-Day","YTD"],
+    catPeriods,catLabels
+  };
+}
+
+// ── DATA PAGE ─────────────────────────────────────────────────────────────────
+function renderSummaryPage(){
+  const el=document.getElementById("summary-content");
+  if(!el)return;
+  const{periods,periodLabels,catPeriods,catLabels}=getSummaryWindows();
+
+  const durVal=data=>fmtDur(avg(data.filter(e=>e.duration>0).map(e=>e.duration)));
+  const durValCompact=data=>{const v=avg(data.filter(e=>e.duration>0).map(e=>e.duration));return v==null?"—":v.toFixed(1)+"h";};
+  const remVal=data=>{const v=avg(data.filter(e=>e.rem>0).map(e=>e.rem));return fmtMin(v);};
+  const deepVal=data=>{const v=avg(data.filter(e=>e.deep>0).map(e=>e.deep));return fmtMin(v);};
+
+  // Colors an event's score against the overall score for that same window:
+  // green if ≥5% above, red if ≥5% below, blue otherwise.
+  function relColor(score,baseline){
+    if(score==null||baseline==null||baseline===0)return"#e6edf3";
+    const diff=(score-baseline)/baseline;
+    if(diff>=0.05)return"#56d364";
+    if(diff<=-0.05)return"#f85149";
+    return"#e6edf3";
+  }
+
+  // ── Quick Look: Yesterday / 30 Days, Score + Duration ──
+  const quickScores=[rawScore(periods[0]),rawScore(periods[2])]; // Yesterday, 30-Day
+  const quickDurs=[durVal(periods[0]),durVal(periods[2])];
+  const quickLookTable=`
+    <div class="card-title" style="margin-top:0">⏰ Quick Look</div>
+    <div class="tablewrap compact"><table>
+      <tr><th class="metric">Metric</th><th>Yesterday</th><th>30 Days</th></tr>
+      <tr><td class="metric" style="font-size:17px">Sleep Score</td><td style="color:${scoreColor(quickScores[0])};font-size:17px">${fmt1(quickScores[0])}</td><td style="color:${scoreColor(quickScores[1])};font-size:17px">${fmt1(quickScores[1])}</td></tr>
+      <tr><td class="metric" style="font-size:17px">Avg Duration</td><td style="font-size:17px">${quickDurs[0]}</td><td style="font-size:17px">${quickDurs[1]}</td></tr>
+    </table></div>`;
+
+  // ── Sleep Metrics: 30/90/180/365-day, Score/Duration/REM/Deep ──
+  const overallScores=catPeriods.map(rawScore); // also used as the baseline for event rows below
+  const scoreColors=overallScores.map((v,i)=>seqColor(overallScores,i));
+  const scoreRowDays=[30,90,180,365];
+  const sleepMetricsTable=`
+    <div class="card-title">😴 Sleep Metrics <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;opacity:.75">· 30/90/180/365-day</span></div>
+    <div class="tablewrap compact"><table>
+      <tr><th class="metric">Metric</th><th>30</th><th>90</th><th>180</th><th>365</th></tr>
+      <tr><td class="metric">Sleep Score</td>${catLabels.map((l,i)=>{
+        const starRaw=starBadge(overallScores[i],scoreRowDays[i]);
+        const star=starRaw?starRaw.replace(/^\s+/,""):"";
+        return`<td style="color:${scoreColors[i]}">${fmt1(overallScores[i])}<div style="height:14px;line-height:14px">${star}</div></td>`;
+      }).join("")}</tr>
+      <tr><td class="metric">Avg Duration</td>${catPeriods.map(d=>`<td>${durValCompact(d)}<div style="height:14px;line-height:14px"></div></td>`).join("")}</tr>
+      <tr><td class="metric">REM Sleep</td>${catPeriods.map(d=>`<td>${remVal(d)}<div style="height:14px;line-height:14px"></div></td>`).join("")}</tr>
+      <tr><td class="metric">Deep Sleep</td>${catPeriods.map(d=>`<td>${deepVal(d)}<div style="height:14px;line-height:14px"></div></td>`).join("")}</tr>
+    </table></div>`;
+
+  // ── Event-Conditional Scores: 30/90/180/365-day, colored vs. the Sleep Score row above ──
+  const eventRows=[
+    {label:"Exercised",cond:e=>e.exercised},
+    {label:"Sex",cond:e=>e.hadSex},
+    {label:"High Stress",cond:e=>e.stress==="High"},
+    {label:"Low Stress",cond:e=>e.stress==="Low"},
+    {label:"At My House",cond:e=>e.location==="Home"},
+    {label:"At Eli's",cond:e=>e.location==="Elizabeth's"},
+    {label:"At Hotel",cond:e=>e.location==="Hotel"},
+    {label:"Slept Together",cond:e=>e.sleptWith==="Elizabeth"},
+    {label:"Late Night Meal",cond:e=>e.lateMeal},
+  ];
+  function eventRow({label,cond}){
+    const counts=catPeriods.map(d=>d.filter(cond).length);
+    const rawScores=catPeriods.map(d=>condScore(d,cond));
+    return`<tr><td class="metric">${label}</td>${catLabels.map((l,i)=>{
+      const col=relColor(rawScores[i],overallScores[i]);
+      const val=fmt1(rawScores[i]);
+      const starRaw=starBadge(rawScores[i],scoreRowDays[i],cond);
+      const star=starRaw?starRaw.replace(/^\s+/,""):"";
+      return`<td style="color:${col};white-space:normal;line-height:1.3">${val}<div style="height:14px;line-height:14px">${star}</div><div style="color:#c9d1d9;font-weight:600;font-size:10px">(${counts[i]})</div></td>`;
+    }).join("")}</tr>`;
+  }
+  const eventTable=`
+    <div class="card-title">☑️ Event-Conditional Scores <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;opacity:.75">· 30/90/180/365-day</span></div>
+    <div class="tablewrap compact"><table>
+      <tr><th class="metric">Metric</th><th>30</th><th>90</th><th>180</th><th>365</th></tr>
+      ${eventRows.map(eventRow).join("")}
+    </table></div>`;
+
+  const trendSection=`
+    <div class="card-title" style="margin-top:0">📈 Trend <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;opacity:.75">· last 6 months</span></div>
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <button onclick="setTrendMetric('score')" id="trend-btn-metric-score" class="trend-btn">Score</button>
+      <button onclick="setTrendMetric('duration')" id="trend-btn-metric-duration" class="trend-btn">Duration</button>
+    </div>
+    <div id="trend-metric-label" style="font-size:14px;font-weight:700;color:#f0f6fc;margin-bottom:6px">Showing: ${trendMetric==='score'?'Score':'Duration'}</div>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button onclick="setTrendGranularity('daily')" id="trend-btn-daily" class="trend-btn">Daily</button>
+      <button onclick="setTrendGranularity('weekly')" id="trend-btn-weekly" class="trend-btn">Weekly</button>
+      <button onclick="setTrendGranularity('monthly')" id="trend-btn-monthly" class="trend-btn">Monthly</button>
+    </div>
+    <div style="position:relative;height:220px"><canvas id="trend-chart"></canvas></div>`;
+
+  el.innerHTML=`<div class="card">${quickLookTable}</div>
+    <div class="card" style="margin-top:12px">${trendSection}</div>
+    <div class="card" style="margin-top:12px">${sleepMetricsTable}</div>
+    <div class="card" style="margin-top:12px">${eventTable}</div>`;
+
+  updateTrendButtons();
+  renderTrendChart();
+}
+
+function renderSummary(){renderSummaryPage();}
+
+function setTrendGranularity(g){
+  trendGranularity=g;
+  updateTrendButtons();
+  renderTrendChart();
+}
+function setTrendMetric(m){
+  trendMetric=m;
+  updateTrendButtons();
+  renderTrendChart();
+}
+
+function updateTrendButtons(){
+  ['daily','weekly','monthly'].forEach(g=>{
+    const btn=document.getElementById('trend-btn-'+g);
+    if(btn)btn.classList.toggle('active',g===trendGranularity);
+  });
+  ['score','duration'].forEach(m=>{
+    const btn=document.getElementById('trend-btn-metric-'+m);
+    if(btn)btn.classList.toggle('active',m===trendMetric);
+  });
+  const lbl=document.getElementById('trend-metric-label');
+  if(lbl)lbl.textContent='Showing: '+(trendMetric==='score'?'Score':'Duration');
+}
+
+function renderTrendChart(){
+  const canvas=document.getElementById('trend-chart');
+  if(!canvas)return;
+  if(trendChart){trendChart.destroy();trendChart=null;}
+
+  const now=new Date();
+  const sixMoAgo=new Date(now);sixMoAgo.setMonth(sixMoAgo.getMonth()-6);
+  const sixMoStr=localDateStr(sixMoAgo);
+  const relevant=entries.filter(e=>e.date>=sixMoStr).sort((a,b)=>a.date.localeCompare(b.date));
+  const isScore=trendMetric==='score';
+
+  let labels=[],primaryData=[],remData=[],deepData=[];
+
+  if(trendGranularity==='daily'){
+    relevant.forEach(e=>{
+      labels.push(e.date.slice(5)); // MM-DD
+      const pv=isScore?e.score:e.duration;
+      primaryData.push(pv>0?pv:null);
+      remData.push(e.rem>0?e.rem:null);
+      deepData.push(e.deep>0?e.deep:null);
+    });
+  }else if(trendGranularity==='weekly'){
+    const weekMap={};
+    relevant.forEach(e=>{
+      const d=new Date(e.date+'T12:00:00');
+      const weekStart=new Date(d);weekStart.setDate(d.getDate()-d.getDay()); // Sunday-start week
+      const key=localDateStr(weekStart);
+      if(!weekMap[key])weekMap[key]={primary:[],rems:[],deeps:[]};
+      const pv=isScore?e.score:e.duration;
+      if(pv>0)weekMap[key].primary.push(pv);
+      if(e.rem>0)weekMap[key].rems.push(e.rem);
+      if(e.deep>0)weekMap[key].deeps.push(e.deep);
+    });
+    Object.keys(weekMap).sort().forEach(key=>{
+      labels.push(key.slice(5));
+      const{primary:p,rems:r,deeps:dp}=weekMap[key];
+      primaryData.push(p.length?Math.round(p.reduce((a,b)=>a+b,0)/p.length*10)/10:null);
+      remData.push(r.length?Math.round(r.reduce((a,b)=>a+b,0)/r.length*10)/10:null);
+      deepData.push(dp.length?Math.round(dp.reduce((a,b)=>a+b,0)/dp.length*10)/10:null);
+    });
+  }else{ // monthly
+    const monthMap={};
+    relevant.forEach(e=>{
+      const key=e.date.slice(0,7); // YYYY-MM
+      if(!monthMap[key])monthMap[key]={primary:[],rems:[],deeps:[]};
+      const pv=isScore?e.score:e.duration;
+      if(pv>0)monthMap[key].primary.push(pv);
+      if(e.rem>0)monthMap[key].rems.push(e.rem);
+      if(e.deep>0)monthMap[key].deeps.push(e.deep);
+    });
+    Object.keys(monthMap).sort().forEach(key=>{
+      labels.push(key);
+      const{primary:p,rems:r,deeps:dp}=monthMap[key];
+      primaryData.push(p.length?Math.round(p.reduce((a,b)=>a+b,0)/p.length*10)/10:null);
+      remData.push(r.length?Math.round(r.reduce((a,b)=>a+b,0)/r.length*10)/10:null);
+      deepData.push(dp.length?Math.round(dp.reduce((a,b)=>a+b,0)/dp.length*10)/10:null);
+    });
+  }
+
+  if(!labels.length){
+    canvas.parentElement.innerHTML='<div style="color:#58a6ff;font-size:13px;padding:20px 0;text-align:center">No data in the last 6 months yet.</div>';
+    return;
+  }
+
+  // REM/Deep share one right-hand axis, so the unit switch (min → hrs at 60+) is decided once,
+  // based on whichever series is larger — keeps both lines on one consistent, readable axis.
+  const remValid=remData.filter(v=>v!=null),deepValid=deepData.filter(v=>v!=null);
+  const typicalMin=Math.max(
+    remValid.length?remValid.reduce((a,b)=>a+b,0)/remValid.length:0,
+    deepValid.length?deepValid.reduce((a,b)=>a+b,0)/deepValid.length:0
+  );
+  const useHrs=typicalMin>=60;
+  const remPlot=useHrs?remData.map(v=>v==null?null:Math.round(v/60*100)/100):remData;
+  const deepPlot=useHrs?deepData.map(v=>v==null?null:Math.round(v/60*100)/100):deepData;
+
+  trendChart=new Chart(canvas,{
+    type:'line',
+    data:{labels,datasets:[
+      {label:isScore?'Sleep Score':'Duration (hrs)',data:primaryData,borderColor:isScore?'#56d364':'#58a6ff',backgroundColor:isScore?'rgba(86,211,100,0.1)':'rgba(88,166,255,0.1)',yAxisID:'y',tension:0.3,spanGaps:true,pointRadius:trendGranularity==='daily'?2:3},
+      {label:useHrs?'REM Sleep (hrs)':'REM Sleep (min)',data:remPlot,borderColor:'#bc8cff',backgroundColor:'rgba(188,140,255,0.1)',yAxisID:'y1',tension:0.3,spanGaps:true,pointRadius:trendGranularity==='daily'?2:3},
+      {label:useHrs?'Deep Sleep (hrs)':'Deep Sleep (min)',data:deepPlot,borderColor:'#f0883e',backgroundColor:'rgba(240,136,62,0.1)',yAxisID:'y1',tension:0.3,spanGaps:true,pointRadius:trendGranularity==='daily'?2:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:'#e6edf3',font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#8b949e',font:{size:9},maxRotation:45,minRotation:45},grid:{color:'rgba(255,255,255,0.05)'}},
+        y:{position:'left',min:0,max:isScore?100:12,ticks:{color:isScore?'#56d364':'#58a6ff',font:{size:10}},grid:{color:'rgba(255,255,255,0.05)'},title:{display:true,text:isScore?'Score':'Hrs',color:isScore?'#56d364':'#58a6ff',font:{size:10}}},
+        y1:{position:'right',min:0,ticks:{color:'#bc8cff',font:{size:10}},grid:{display:false},title:{display:true,text:useHrs?'Hrs':'Min',color:'#bc8cff',font:{size:10}}}
+      }}
+  });
+}
+
+function setLifeTrendGroup(g){
+  lifeTrendGroup=g;
+  updateLifeTrendButtons();
+  renderLifeTrendChart();
+}
+function setLifeTrendGranularity(g){
+  lifeTrendGranularity=g;
+  updateLifeTrendButtons();
+  renderLifeTrendChart();
+}
+function updateLifeTrendButtons(){
+  ['sleep','lifestyle'].forEach(g=>{
+    const btn=document.getElementById('life-group-btn-'+g);
+    if(btn)btn.classList.toggle('active',g===lifeTrendGroup);
+  });
+  ['daily','weekly','monthly'].forEach(g=>{
+    const btn=document.getElementById('life-trend-btn-'+g);
+    if(btn)btn.classList.toggle('active',g===lifeTrendGranularity);
+  });
+}
+
+// Metric sets mirroring the two Lifestyle Summary tables — each becomes one line on the chart.
+function lifeTrendMetrics(){
+  if(lifeTrendGroup==='sleep'){
+    return[
+      {label:'Score >70',cond:e=>e.score>70,denom:e=>e.score>0,color:'#3fb950'},
+      {label:'<4 hrs',cond:e=>e.duration>0&&e.duration<4,denom:e=>e.duration>0,color:'#f85149'},
+      {label:'4–6 hrs',cond:e=>e.duration>=4&&e.duration<6,denom:e=>e.duration>0,color:'#f0883e'},
+      {label:'6–7 hrs',cond:e=>e.duration>=6&&e.duration<=7,denom:e=>e.duration>0,color:'#58a6ff'},
+      {label:'>7 hrs',cond:e=>e.duration>7,denom:e=>e.duration>0,color:'#bc8cff'},
+    ];
+  }
+  return[
+    {label:'Exercised',cond:e=>e.exercised,color:'#3fb950'},
+    {label:'Sex',cond:e=>e.hadSex,color:'#f0883e'},
+    {label:'High Stress',cond:e=>e.stress==='High',color:'#f85149'},
+    {label:'Low Stress',cond:e=>e.stress==='Low',color:'#56d364'},
+    {label:'At My House',cond:e=>e.location==='Home',color:'#8b949e'},
+    {label:"At Eli's",cond:e=>e.location==="Elizabeth's",color:'#bc8cff'},
+    {label:'At Hotel',cond:e=>e.location==='Hotel',color:'#58a6ff'},
+    {label:'Slept Together',cond:e=>e.sleptWith==='Elizabeth',color:'#f0883e'},
+    {label:'Late Night Meal',cond:e=>e.lateMeal,color:'#f85149'},
+  ];
+}
+
+function renderLifeTrendChart(){
+  const canvas=document.getElementById('life-trend-chart');
+  if(!canvas)return;
+  if(lifeTrendChart){lifeTrendChart.destroy();lifeTrendChart=null;}
+
+  const now=new Date();
+  const sixMoAgo=new Date(now);sixMoAgo.setMonth(sixMoAgo.getMonth()-6);
+  const sixMoStr=localDateStr(sixMoAgo);
+  const relevant=entries.filter(e=>e.date>=sixMoStr).sort((a,b)=>a.date.localeCompare(b.date));
+  const metrics=lifeTrendMetrics();
+
+  // Group raw entries into buckets first (by day/week/month), then compute each metric's % per bucket.
+  function bucketKey(dateStr){
+    if(lifeTrendGranularity==='daily')return dateStr;
+    if(lifeTrendGranularity==='monthly')return dateStr.slice(0,7);
+    const d=new Date(dateStr+'T12:00:00');
+    const weekStart=new Date(d);weekStart.setDate(d.getDate()-d.getDay());
+    return localDateStr(weekStart);
+  }
+  const buckets={};
+  relevant.forEach(e=>{
+    const key=bucketKey(e.date);
+    if(!buckets[key])buckets[key]=[];
+    buckets[key].push(e);
+  });
+  const keys=Object.keys(buckets).sort();
+  const labels=keys.map(k=>lifeTrendGranularity==='monthly'?k:k.slice(5));
+
+  if(!keys.length){
+    canvas.parentElement.innerHTML='<div style="color:#58a6ff;font-size:13px;padding:20px 0;text-align:center">No data in the last 6 months yet.</div>';
+    return;
+  }
+
+  // Volume, not %: raw count of matching nights per bucket. Each bucket is a fixed size
+  // (one day / one week / one month), so a count is meaningful and comparable across buckets —
+  // unlike the summary tables below, where 30/90/180/365-day columns are different sizes and % is fairer there.
+  const maxCount=lifeTrendGranularity==='daily'?1:lifeTrendGranularity==='weekly'?7:31;
+  const yLabel=lifeTrendGranularity==='daily'?'nights':lifeTrendGranularity==='weekly'?'nights/week':'nights/month';
+
+  const datasets=metrics.map(m=>({
+    label:m.label,
+    borderColor:m.color,
+    backgroundColor:'transparent',
+    tension:0.3,
+    spanGaps:true,
+    pointRadius:lifeTrendGranularity==='daily'?1.5:2.5,
+    borderWidth:1.5,
+    stepped:lifeTrendGranularity==='daily', // daily is inherently a 0/1 step, not a smooth curve
+    data:keys.map(k=>{
+      const bucket=buckets[k];
+      const base=m.denom?bucket.filter(m.denom):bucket;
+      if(!base.length)return null;
+      return base.filter(m.cond).length;
+    })
+  }));
+
+  lifeTrendChart=new Chart(canvas,{
+    type:'line',
+    data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:'#e6edf3',font:{size:10},boxWidth:10}}},
+      scales:{
+        x:{ticks:{color:'#8b949e',font:{size:9},maxRotation:45,minRotation:45},grid:{color:'rgba(255,255,255,0.05)'}},
+        y:{min:0,suggestedMax:maxCount,ticks:{color:'#8b949e',font:{size:10},stepSize:1},grid:{color:'rgba(255,255,255,0.05)'},title:{display:true,text:yLabel,color:'#8b949e',font:{size:10}}}
+      }}
+  });
+}
+
+// Returns a small star badge if `pctValue` (0-100) ties the all-time high or low percentage-
+// of-occurrence for that same rolling window/condition (green=high, red=low).
+function starBadgePct(pctValue,days,condFn){
+  if(pctValue==null)return"";
+  const dates=[...new Set(entries.map(e=>e.date))].sort();
+  const series=dates.map(d=>{
+    let startDate;
+    if(days==="ytd"){startDate=d.slice(0,4)+"-01-01";}
+    else{const dt=new Date(d+"T12:00:00");dt.setDate(dt.getDate()-days);startDate=localDateStr(dt);}
+    const windowEntries=entries.filter(e=>e.date>=startDate&&e.date<=d);
+    if(!windowEntries.length)return null;
+    return Math.round(windowEntries.filter(condFn).length/windowEntries.length*100);
+  }).filter(v=>v!=null);
+  if(series.length<2)return"";
+  const hi=Math.max(...series),lo=Math.min(...series);
+  if(pctValue>=hi)return` <span style="color:#3fb950">★</span>`;
+  if(pctValue<=lo)return` <span style="color:#f85149">★</span>`;
+  return"";
+}
+
+// ── LIFESTYLE SUMMARY PAGE ──────────────────────────────────────────────────────
+function renderLifestylePage(){
+  const el=document.getElementById("lifestyle-content");
+  if(!el)return;
+  const{catPeriods,catLabels}=getSummaryWindows();
+  const catRowDays=[30,90,180,365];
+
+  function pctRow({label,colorFn,condFn,denomFn}){
+    return`<tr><td class="metric">${label}</td>${catLabels.map((l,i)=>{
+      const d=catPeriods[i];
+      const base=denomFn?d.filter(denomFn):d;
+      const n=base.length;
+      const enough=n>=MIN_N;
+      const matchN=base.filter(condFn).length;
+      const pctNum=enough?Math.round(matchN/n*100):null;
+      const val=enough?pctNum+"%":"—";
+      const col=enough&&colorFn?colorFn():"#e6edf3";
+      const starRaw=enough?starBadgePct(pctNum,catRowDays[i],condFn):"";
+      const star=starRaw?starRaw.replace(/^\s+/,""):"";
+      return`<td style="color:${col}">${val}<div style="height:14px;line-height:14px">${star}</div></td>`;
+    }).join("")}</tr>`;
+  }
+
+  const sleepDistRows=[
+    {label:"Score >70",colorFn:()=>"#3fb950",condFn:e=>e.score>70,denomFn:e=>e.score>0},
+    {label:"Duration <4 hrs",colorFn:()=>"#f85149",condFn:e=>e.duration>0&&e.duration<4,denomFn:e=>e.duration>0},
+    {label:"Duration 4–6 hrs",colorFn:()=>"#f0883e",condFn:e=>e.duration>=4&&e.duration<6,denomFn:e=>e.duration>0},
+    {label:"Duration 6–7 hrs",colorFn:()=>"#58a6ff",condFn:e=>e.duration>=6&&e.duration<=7,denomFn:e=>e.duration>0},
+    {label:"Duration >7 hrs",colorFn:()=>"#3fb950",condFn:e=>e.duration>7,denomFn:e=>e.duration>0},
+  ];
+  const eventRows=[
+    {label:"Exercised",colorFn:null,condFn:e=>e.exercised},
+    {label:"Sex",colorFn:null,condFn:e=>e.hadSex},
+    {label:"High Stress",colorFn:()=>"#f85149",condFn:e=>e.stress==="High"},
+    {label:"Low Stress",colorFn:()=>"#3fb950",condFn:e=>e.stress==="Low"},
+    {label:"At My House",colorFn:()=>"#3fb950",condFn:e=>e.location==="Home"},
+    {label:"At Eli's",colorFn:()=>"#bc8cff",condFn:e=>e.location==="Elizabeth's"},
+    {label:"At Hotel",colorFn:()=>"#58a6ff",condFn:e=>e.location==="Hotel"},
+    {label:"Slept Together",colorFn:()=>"#f0883e",condFn:e=>e.sleptWith==="Elizabeth"},
+    {label:"Late Night Meal",colorFn:()=>"#f85149",condFn:e=>e.lateMeal},
+  ];
+
+  const sleepDistTable=`
+    <div class="card-title" style="margin-top:0">😴 Sleep Metrics <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;opacity:.75">· 30/90/180/365-day</span></div>
+    <div class="tablewrap compact"><table>
+      <tr><th class="metric">Metric</th><th>30</th><th>90</th><th>180</th><th>365</th></tr>
+      ${sleepDistRows.map(pctRow).join("")}
+    </table></div>`;
+
+  const eventTable=`
+    <div class="card-title">☑️ Lifestyle Metrics <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;opacity:.75">· 30/90/180/365-day</span></div>
+    <div class="tablewrap compact"><table>
+      <tr><th class="metric">Metric</th><th>30</th><th>90</th><th>180</th><th>365</th></tr>
+      ${eventRows.map(pctRow).join("")}
+    </table></div>`;
+
+  const trendSection=`
+    <div class="card-title" style="margin-top:0">📈 Trend <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;opacity:.75">· last 6 months</span></div>
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <button onclick="setLifeTrendGroup('sleep')" id="life-group-btn-sleep" class="trend-btn">Sleep</button>
+      <button onclick="setLifeTrendGroup('lifestyle')" id="life-group-btn-lifestyle" class="trend-btn">Lifestyle</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button onclick="setLifeTrendGranularity('weekly')" id="life-trend-btn-weekly" class="trend-btn">Weekly</button>
+      <button onclick="setLifeTrendGranularity('monthly')" id="life-trend-btn-monthly" class="trend-btn">Monthly</button>
+    </div>
+    <div style="position:relative;height:240px"><canvas id="life-trend-chart"></canvas></div>`;
+
+  el.innerHTML=`<div class="card">${trendSection}</div>
+    <div class="card" style="margin-top:12px">${sleepDistTable}</div>
+    <div class="card" style="margin-top:12px">${eventTable}</div>`;
+
+  updateLifeTrendButtons();
+  renderLifeTrendChart();
+}
+
+function renderData(){
+  const el=document.getElementById("data-metrics");
+  const list=document.getElementById("entries-list");
+  if(!entries.length){
+    el.innerHTML="";
+    list.innerHTML=`<div class="empty"><div class="empty-icon">💤</div>No entries yet. Log your first night!</div>`;
+    return;
+  }
+
+  el.innerHTML="";
+
+  list.innerHTML=`<div class="card"><div class="card-title">All Entries</div>`+
+  [...entries].reverse().map(e=>`
+    <div class="entry">
+      <div class="e-left">
+        <div class="e-date">${e.date}</div>
+        <div class="e-main">Bedtime ${e.bedtime} · ${Math.floor(e.duration)}h ${Math.round((e.duration%1)*60)}m sleep</div>
+        <div class="e-meta">${e.location} · ${e.sleptWith} · Stress ${e.stress}${e.exercised?" · Exercised":""}${e.workedLate?" · Worked late":""}${e.highBurn?" · 3000+ cal":""}${e.hadSex?" · Sex":""}${e.lateMeal?" · Late meal":""}${e.meds?.length?" · "+e.meds.length+" med(s)":""}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div class="e-score">${e.score||"—"}</div>
+        <div class="e-slabel">score</div>
+        <button onclick="openEdit(${e.id})" style="padding:4px 10px;background:#1c2128;border:1px solid #30363d;color:#58a6ff;border-radius:5px;font-size:12px;cursor:pointer;font-family:inherit">✏️ Edit</button>
+      </div>
+    </div>
+  `).join("")+`</div>`;
+}
+
+let editingId=null;
+
+function openEdit(id){
+  const e=entries.find(x=>x.id===id);
+  if(!e)return;
+  editingId=id;
+
+  document.getElementById("e-date").value=e.date||"";
+
+  // Populate edit hr/min dropdowns if empty — must happen BEFORE setting their .value below,
+  // otherwise assigning a value to an empty <select> silently fails and it defaults to nothing selected.
+  const eHr=document.getElementById("e-hr");
+  if(!eHr.options.length){
+    for(let h=1;h<=12;h++){const o=document.createElement("option");o.value=h;o.textContent=h;eHr.appendChild(o);}
+  }
+  const eMn=document.getElementById("e-min");
+  if(!eMn.options.length){
+    ["00","05","10","15","20","25","30","35","40","45","50","55"].forEach(m=>{
+      const o=document.createElement("option");o.value=m;o.textContent=m;eMn.appendChild(o);
+    });
+  }
+
+  // Parse bedtime
+  const parts = e.bedtime ? e.bedtime.split(/[: ]/) : ['','',''];
+  document.getElementById("e-hr").value=parts[0]||'';
+  document.getElementById("e-min").value=parts[1]||'';
+  document.getElementById("e-ampm").value=parts[2]||'';
+  document.getElementById("e-dur-hr").value=e.duration?Math.floor(e.duration):'';
+  document.getElementById("e-dur-min").value=e.duration?Math.round((e.duration%1)*60):'';
+  document.getElementById("e-score").value=e.score||'';
+  document.getElementById("e-rem").value=e.rem||'';
+  document.getElementById("e-deep").value=e.deep||'';
+  document.getElementById("e-stress").value=e.stress||"Med";
+  document.getElementById("e-location").value=e.location||"Home";
+  document.getElementById("e-slepton").value=e.sleptWith||"Alone";
+  document.getElementById("e-exercised").checked=!!e.exercised;
+  document.getElementById("e-worked-late").checked=!!e.workedLate;
+  document.getElementById("e-high-burn").checked=!!e.highBurn;
+  document.getElementById("e-had-sex").checked=!!e.hadSex;
+  document.getElementById("e-late-meal").checked=!!e.lateMeal;
+
+  // Build interactive med rows for editing
+  const medsContainer = document.getElementById("e-meds-rows");
+  medsContainer.innerHTML = "";
+
+  PRESET_MEDS.forEach(med => {
+    const key = med.name.replace(/\s+/g,"_");
+    // Get ALL entries for this med (could be multiple at different times)
+    const existingAll = (e.meds||[]).filter(m=>m.name===med.name);
+    const checked = existingAll.length > 0;
+
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "margin-bottom:6px;padding:10px 12px;background:#0d1117;border:1px solid #30363d;border-radius:8px";
+
+    // Build dose rows HTML for each existing entry
+    const buildDoseRows = (instances) => {
+      return instances.map((inst, idx) => {
+        const dose = parseFloat(String(inst.dose).replace(/[^0-9.]/g,''));
+        const legacyNote = (!inst.hr && inst.slot)
+          ? `<div style="font-size:11px;color:#d29922;margin-bottom:6px">⚠ Originally logged as: ${inst.slot} (no exact time saved — please pick your best estimate below)</div>`
+          : "";
+        return `<div class="e-med-row" data-med="${key}" data-idx="${idx}" style="border:1px solid #21262d;border-radius:6px;padding:8px;margin-bottom:6px;position:relative">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+            ${[med.dose*0.5,med.dose,med.dose*1.5,med.dose*2].map(d=>`<label style="font-size:12px;color:#58a6ff;display:flex;align-items:center;gap:3px"><input type="radio" name="e_dose_${key}_${idx}" value="${d}" ${Math.abs(dose-d)<0.01?'checked':''} style="accent-color:#58a6ff"> ${d}${med.unit}</label>`).join("")}
+          </div>
+          ${legacyNote}
+          <div style="display:flex;gap:6px;align-items:center">
+            <select name="e_hr_${key}_${idx}" style="font-size:12px;padding:6px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3">${hrOptionsHTML(inst.hr)}</select>
+            <select name="e_min_${key}_${idx}" style="font-size:12px;padding:6px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3">${minOptionsHTML(inst.min)}</select>
+            <select name="e_ampm_${key}_${idx}" style="font-size:12px;padding:6px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3">${ampmOptionsHTML(inst.ampm)}</select>
+            <button onclick="removeMedRow(this)" style="font-size:11px;padding:4px 8px;background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);color:#f85149;border-radius:5px;cursor:pointer;font-family:inherit;margin-left:auto">✕</button>
+          </div>
+        </div>`;
+      }).join('');
+    };
+
+    wrap.innerHTML = `
+      <label style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:#e6edf3;cursor:pointer;padding:2px 0;margin-bottom:${checked?'8px':'0'}">
+        <input type="checkbox" id="e_chk_${key}" onchange="toggleEditMedDetail('${key}')" ${checked?'checked':''} style="width:18px;height:18px;flex-shrink:0;accent-color:#58a6ff">
+        <span>${med.name}</span>
+      </label>
+      <div id="e_detail_${key}" style="display:${checked?'block':'none'};padding-left:8px">
+        <div id="e_rows_${key}">
+          ${checked ? buildDoseRows(existingAll) : buildDoseRows([{dose:med.dose}])}
+        </div>
+        <button onclick="addMedRow('${key}','${med.name}',${med.dose},'${med.unit}')" style="font-size:12px;padding:5px 10px;background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.3);color:#58a6ff;border-radius:5px;cursor:pointer;font-family:inherit;margin-top:2px">+ Add another time</button>
+      </div>`;
+    medsContainer.appendChild(wrap);
+  });
+  document.getElementById("e-events").value=e.events||"";
+  document.getElementById("e-notes").value=e.notes||"";
+
+  document.getElementById("edit-modal").style.display="block";
+  document.body.style.overflow="hidden";
+}
+
+function closeEdit(){
+  document.getElementById("edit-modal").style.display="none";
+  document.body.style.overflow="";
+  editingId=null;
+}
+
+function addMedRow(key, name, defaultDose, unit) {
+  const container = document.getElementById("e_rows_"+key);
+  const idx = container.querySelectorAll(".e-med-row").length;
+  const div = document.createElement("div");
+  div.className = "e-med-row";
+  div.style.cssText = "border:1px solid #21262d;border-radius:6px;padding:8px;margin-bottom:6px";
+  div.innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+      ${[defaultDose*0.5,defaultDose,defaultDose*1.5,defaultDose*2].map(d=>`<label style="font-size:12px;color:#58a6ff;display:flex;align-items:center;gap:3px"><input type="radio" name="e_dose_${key}_${idx}" value="${d}" ${d===defaultDose?'checked':''} style="accent-color:#58a6ff"> ${d}${unit}</label>`).join("")}
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <select name="e_hr_${key}_${idx}" style="font-size:12px;padding:6px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3">${hrOptionsHTML()}</select>
+      <select name="e_min_${key}_${idx}" style="font-size:12px;padding:6px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3">${minOptionsHTML()}</select>
+      <select name="e_ampm_${key}_${idx}" style="font-size:12px;padding:6px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3">${ampmOptionsHTML()}</select>
+      <button onclick="removeMedRow(this)" style="font-size:11px;padding:4px 8px;background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);color:#f85149;border-radius:5px;cursor:pointer;font-family:inherit;margin-left:auto">✕</button>
+    </div>`;
+  container.appendChild(div);
+}
+
+function removeMedRow(btn) {
+  const row = btn.closest ? btn.closest(".e-med-row") : btn.parentNode;
+  if (row) row.parentNode.removeChild(row);
+}
+
+function toggleEditMedDetail(key){
+  const chk = document.getElementById("e_chk_"+key);
+  const det = document.getElementById("e_detail_"+key);
+  if(det) det.style.display = chk.checked ? "block" : "none";
+}
+
+function saveEdit(){
+  if(!editingId)return;
+  const idx=entries.findIndex(x=>x.id===editingId);
+  if(idx===-1)return;
+  const hr=document.getElementById("e-hr").value;
+  const mn=document.getElementById("e-min").value;
+  const ampm=document.getElementById("e-ampm").value;
+
+  // Read meds from edit modal
+  const editMeds = [];
+  PRESET_MEDS.forEach(med => {
+    const key = med.name.replace(/\s+/g,"_");
+    const chk = document.getElementById("e_chk_"+key);
+    if(chk && chk.checked){
+      const rows = document.querySelectorAll("#e_rows_"+key+" .e-med-row");
+      const bedFloat = (parseInt(hr)%12+(ampm==="PM"?12:0))+(parseInt(mn)||0)/60;
+      rows.forEach((row, idx) => {
+        const doseEl = row.querySelector(`input[name="e_dose_${key}_${idx}"]:checked`) || row.querySelector('input[type="radio"]:checked');
+        const hrEl = row.querySelector(`select[name="e_hr_${key}_${idx}"]`) || row.querySelectorAll('select')[0];
+        const minEl = row.querySelector(`select[name="e_min_${key}_${idx}"]`) || row.querySelectorAll('select')[1];
+        const ampmEl = row.querySelector(`select[name="e_ampm_${key}_${idx}"]`) || row.querySelectorAll('select')[2];
+        const dose = doseEl ? parseFloat(doseEl.value) : med.dose;
+        const medHr = hrEl?.value, medMin = minEl?.value||"00", medAmpm = ampmEl?.value;
+        if(!medHr||!medAmpm)return; // no time entered, skip this dose row
+        const medFloat = (parseInt(medHr)%12+(medAmpm==="PM"?12:0))+parseInt(medMin)/60;
+        editMeds.push({name:med.name,dose,unit:med.unit,hr:medHr,min:medMin,ampm:medAmpm,hrs:hrsBeforeBedExact(medFloat,bedFloat),doseNum:idx+1,totalDoses:rows.length});
+      });
+    }
+  });
+
+  entries[idx]={
+    ...entries[idx],
+    date:document.getElementById("e-date").value,
+    bedtime:`${hr}:${mn} ${ampm}`,
+    duration:(parseInt(document.getElementById("e-dur-hr").value)||0)+(parseInt(document.getElementById("e-dur-min").value)||0)/60,
+    score:parseInt(document.getElementById("e-score").value)||0,
+    rem:parseInt(document.getElementById("e-rem").value)||0,
+    deep:parseInt(document.getElementById("e-deep").value)||0,
+    stress:document.getElementById("e-stress").value,
+    location:document.getElementById("e-location").value,
+    sleptWith:document.getElementById("e-slepton").value,
+    exercised:document.getElementById("e-exercised").checked,
+    workedLate:document.getElementById("e-worked-late").checked,
+    highBurn:document.getElementById("e-high-burn").checked,
+    hadSex:document.getElementById("e-had-sex").checked,
+    lateMeal:document.getElementById("e-late-meal").checked,
+    events:document.getElementById("e-events").value,
+    notes:document.getElementById("e-notes").value,
+    meds:editMeds,
+  };
+  localStorage.setItem("sleep_v2",JSON.stringify(entries));
+  showToast("✓ Entry updated");
+  closeEdit();
+  renderData();
+}
+
+function deleteEntry(){
+  if(!editingId)return;
+  if(!confirm("Delete this entry?"))return;
+  entries=entries.filter(x=>x.id!==editingId);
+  localStorage.setItem("sleep_v2",JSON.stringify(entries));
+  showToast("Entry deleted");
+  closeEdit();
+  renderData();
+}
+
+// Slope of the least-squares regression line: how much y actually changes per unit of x.
+// This is the "effect size" — separate from r, which only measures how consistent the relationship is.
+function regressSlope(xs,ys){
+  const n=xs.length;if(n<2)return null;
+  const mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;
+  let num=0,vx=0;
+  for(let i=0;i<n;i++){num+=(xs[i]-mx)*(ys[i]-my);vx+=(xs[i]-mx)**2;}
+  if(vx===0)return null;
+  return Math.round((num/vx)*100)/100;
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function pearsonR(xs,ys){
+  const n=xs.length;if(n<2)return{r:null,p:null};
+  const mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;
+  let num=0,vx=0,vy=0;
+  for(let i=0;i<n;i++){num+=(xs[i]-mx)*(ys[i]-my);vx+=(xs[i]-mx)**2;vy+=(ys[i]-my)**2;}
+  if(vx===0||vy===0)return{r:0,p:1};
+  const r=num/Math.sqrt(vx*vy);
+  const t=r*Math.sqrt((n-2)/(1-r*r+1e-10));
+  const p=Math.max(0,Math.min(1,2*(1-tApprox(Math.abs(t),n-2))));
+  return{r:Math.round(r*1000)/1000,p:Math.round(p*10000)/10000};
+}
+
+function tApprox(t,df){
+  const x=df/(df+t*t);
+  const a=0.5,b=df/2;
+  let ibeta=Math.pow(x,a)*Math.pow(1-x,b)/(a*betaFn(a,b));
+  return Math.max(0,Math.min(1,1-Math.min(ibeta,1)*0.5));
+}
+
+function betaFn(a,b){
+  return Math.exp(lgamma(a)+lgamma(b)-lgamma(a+b));
+}
+
+function lgamma(x){
+  const c=[76.18009172947146,-86.50532032941677,24.01409824083091,
+           -1.231739572450155,1.208650973866179e-3,-5.395239384953e-6];
+  let y=x,tmp=x+5.5;tmp-=(x+0.5)*Math.log(tmp);
+  let s=1.000000000190015;
+  for(let j=0;j<6;j++)s+=c[j]/++y;
+  return -tmp+Math.log(2.5066282746310005*s/x);
+}
+
+function corrStrength(r){
+  const a=Math.abs(r);
+  if(a>=0.7)return"Strong";if(a>=0.4)return"Moderate";if(a>=0.2)return"Weak";return"Negligible";
+}
+
+// Finds the t critical value for a 95% two-tailed CI at a given df, by searching against
+// tApprox (which already approximates the t-distribution CDF) since we don't have a closed form.
+function tCritical95(df){
+  if(df<1)return null;
+  let lo=0,hi=60;
+  for(let i=0;i<60;i++){
+    const mid=(lo+hi)/2;
+    if(tApprox(mid,df)<0.975)lo=mid;else hi=mid;
+  }
+  return(lo+hi)/2;
+}
+
+// 95% CI on a regression slope (continuous/ordinal predictors), via standard OLS slope SE.
+function slopeCI(xs,ys){
+  const n=xs.length;if(n<3)return null;
+  const mx=xs.reduce((a,b)=>a+b,0)/n,my=ys.reduce((a,b)=>a+b,0)/n;
+  let Sxx=0,Sxy=0;
+  for(let i=0;i<n;i++){Sxx+=(xs[i]-mx)**2;Sxy+=(xs[i]-mx)*(ys[i]-my);}
+  if(Sxx===0)return null;
+  const slope=Sxy/Sxx,intercept=my-slope*mx;
+  let SSE=0;
+  for(let i=0;i<n;i++){const pred=slope*xs[i]+intercept;SSE+=(ys[i]-pred)**2;}
+  const df=n-2;if(df<1)return null;
+  const SEslope=Math.sqrt((SSE/df)/Sxx);
+  const tcrit=tCritical95(df);if(tcrit==null)return null;
+  return{slope,lb:slope-tcrit*SEslope,ub:slope+tcrit*SEslope};
+}
+
+// 95% CI on the difference in means between two groups (binary predictors), using Welch's
+// t-test — this naturally widens when either group is small, which is exactly what's needed
+// to make a thin minority group visibly unreliable rather than falsely "significant."
+function meanDiffCI(xs,ys){
+  const g1=[],g0=[];
+  for(let i=0;i<xs.length;i++)(xs[i]===1?g1:g0).push(ys[i]);
+  const n1=g1.length,n0=g0.length;
+  if(n1<2||n0<2)return{diff:n1&&n0?(g1.reduce((a,b)=>a+b,0)/n1)-(g0.reduce((a,b)=>a+b,0)/n0):null,lb:null,ub:null,n1,n0};
+  const mean1=g1.reduce((a,b)=>a+b,0)/n1,mean0=g0.reduce((a,b)=>a+b,0)/n0;
+  const var1=g1.reduce((a,b)=>a+(b-mean1)**2,0)/(n1-1);
+  const var0=g0.reduce((a,b)=>a+(b-mean0)**2,0)/(n0-1);
+  const diff=mean1-mean0;
+  const SEdiff=Math.sqrt(var1/n1+var0/n0);
+  if(SEdiff===0)return{diff,lb:diff,ub:diff,n1,n0};
+  const dfWelch=(var1/n1+var0/n0)**2/(((var1/n1)**2)/(n1-1)+((var0/n0)**2)/(n0-1));
+  const tcrit=tCritical95(dfWelch);if(tcrit==null)return{diff,lb:null,ub:null,n1,n0};
+  return{diff,lb:diff-tcrit*SEdiff,ub:diff+tcrit*SEdiff,n1,n0};
+}
+
+// ── CORRELATIONS ──────────────────────────────────────────────────────────────
+function getFactors(target){
+  const factors=[
+    {label:"Exercised (0/1)",fn:e=>e.exercised?1:0},
+    {label:"Stress (Low=1,Med=2,High=3)",fn:e=>({Low:1,Med:2,High:3}[e.stress]||2)},
+    {label:"Worked Past 9 PM (0/1)",fn:e=>e.workedLate?1:0},
+    {label:"Burned 3000+ Calories (0/1)",fn:e=>e.highBurn?1:0},
+    {label:"Had Sex (0/1)",fn:e=>e.hadSex?1:0},
+    {label:"Late Night Meal (0/1)",fn:e=>e.lateMeal?1:0},
+    {label:"Slept at Home (0/1)",fn:e=>e.location==="Home"?1:0},
+    {label:"Slept at Elizabeth's (0/1)",fn:e=>e.location==="Elizabeth's"?1:0},
+    {label:"Slept at Hotel (0/1)",fn:e=>e.location==="Hotel"?1:0},
+  ];
+  // Duration is normally an outcome choice, not a factor — but when Sleep Score is the outcome,
+  // Duration itself is a very natural thing to correlate against it (correlating it with itself
+  // when Duration IS the outcome would be trivial/meaningless, so it's skipped in that case).
+  if(target!=="duration"){
+    factors.push({label:"Sleep Duration (hrs)",fn:e=>e.duration>0?e.duration:null});
+  }
+  const medNames=[...new Set(entries.flatMap(e=>(e.meds||[]).map(m=>m.name)))];
+  medNames.forEach(name=>{
+    factors.push({label:`Took ${name} (0/1)`,fn:e=>(e.meds||[]).some(x=>x.name===name)?1:0});
+    factors.push({label:`${name} — hrs before bed`,fn:e=>{
+      const doses=(e.meds||[]).filter(x=>x.name===name).map(x=>parseFloat(x.hrs)).filter(h=>!isNaN(h));
+      return doses.length?Math.min(...doses):null; // closest dose to bedtime = smallest hrs-before-bed
+    }});
+  });
+  return factors;
+}
+
+// Breaks location and company apart, since at Elizabeth's you're almost always together and
+// at home you're almost always alone — the two variables move together in most nights. The rare
+// crossover nights (e.g. together at home) are the only ones that can actually separate the two.
+function renderComboBreakdown(){
+  const el=document.getElementById("combo-results");
+  if(!el)return;
+  const combos=[
+    {label:"🏠 Home + Alone",cond:e=>e.location==="Home"&&e.sleptWith==="Alone"},
+    {label:"🏠 Home + Together",cond:e=>e.location==="Home"&&e.sleptWith==="Elizabeth"},
+    {label:"🏡 Eli's + Alone",cond:e=>e.location==="Elizabeth's"&&e.sleptWith==="Alone"},
+    {label:"🏡 Eli's + Together",cond:e=>e.location==="Elizabeth's"&&e.sleptWith==="Elizabeth"},
+    {label:"🏨 Hotel + Alone",cond:e=>e.location==="Hotel"&&e.sleptWith==="Alone"},
+    {label:"🏨 Hotel + Together",cond:e=>e.location==="Hotel"&&e.sleptWith==="Elizabeth"},
+  ];
+  el.innerHTML=combos.map(c=>{
+    const matched=entries.filter(c.cond);
+    const scores=matched.filter(e=>e.score>0).map(e=>e.score);
+    const avgS=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length*10)/10:null;
+    const low=matched.length>0&&matched.length<5;
+    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #21262d">
+      <span style="font-size:16px;color:#f0f6fc;font-weight:600">${c.label}</span>
+      <div style="text-align:right">
+        <div style="font-size:15px;font-weight:700;font-family:monospace;color:${avgS==null?"#58a6ff":scoreColor(avgS)}">${avgS??"—"}</div>
+        <div style="font-size:11px;color:#58a6ff">n=${matched.length}${low?" (too few to trust)":""}</div>
+      </div>
+    </div>`;
+  }).join("")+`<div style="font-size:12px;color:#58a6ff;opacity:.7;margin-top:8px">Rows that break from your usual pattern (e.g. Home+Together, Eli's+Alone) are the only ones that can isolate location from company — but with so few of them, treat these as descriptive, not statistically solid.</div>`;
+}
+
+function renderCorr(){
+  const target=document.getElementById("corr-target").value;
+  const targetFn=target==="score"?e=>e.score:e=>e.duration;
+  const el=document.getElementById("corr-results");
+  renderComboBreakdown();
+
+  if(entries.length<5){
+    el.innerHTML=`<div style="color:#58a6ff;font-size:13px">Need at least 5 nights of data.</div>`;
+    return;
+  }
+
+  const MIN_GROUP=5; // minimum nights needed in BOTH the yes and no group before "sig" is trusted
+  const isDur=target==="duration";
+  const unit=isDur?"min":"pts";
+  // Converts a raw score-scale effect/CI number into the display unit (minutes if Duration is selected).
+  const conv=v=>v==null?null:(isDur?Math.round(v*60*10)/10:Math.round(v*10)/10);
+
+  const results=getFactors(target).map(f=>{
+    const pairs=entries.map(e=>({x:f.fn(e),y:targetFn(e)})).filter(p=>p.x!=null&&p.y!=null);
+    if(pairs.length<5)return null;
+    const{r,p}=pearsonR(pairs.map(p=>p.x),pairs.map(p=>p.y));
+    if(r==null)return null;
+    const avgX=Math.round(pairs.reduce((a,b)=>a+b.x,0)/pairs.length*10)/10;
+    const isBinary=f.label.includes("(0/1)");
+    let effect,lb,ub,minGroup=null;
+    if(isBinary){
+      const ci=meanDiffCI(pairs.map(p=>p.x),pairs.map(p=>p.y));
+      effect=ci.diff;lb=ci.lb;ub=ci.ub;
+      minGroup=Math.min(ci.n1,ci.n0);
+    }else{
+      const ci=slopeCI(pairs.map(p=>p.x),pairs.map(p=>p.y));
+      if(ci){effect=ci.slope;lb=ci.lb;ub=ci.ub;}
+    }
+    return{label:f.label,r,p,n:pairs.length,avgX,effect,lb,ub,isHrs:f.label.includes("hrs before bed"),isBinary,minGroup};
+  }).filter(Boolean).sort((a,b)=>Math.abs(b.r)-Math.abs(a.r));
+
+  if(!results.length){
+    el.innerHTML=`<div style="color:#58a6ff;font-size:13px">Not enough variation for correlations yet.</div>`;
+    return;
+  }
+
+  function sigCell({p,isBinary,minGroup,lb,ub}){
+    const lowGroup=isBinary&&minGroup!=null&&minGroup<MIN_GROUP;
+    if(lowGroup)return`<span style="color:#d29922;font-weight:700">⚠ Thin</span>`;
+    if(lb==null||ub==null)return`<span style="color:#8b949e">—</span>`;
+    const ciExcludesZero=lb>0&&ub>0||lb<0&&ub<0; // CI doesn't cross zero
+    return ciExcludesZero&&p<0.05
+      ?`<span style="color:#56d364;font-weight:700">✅ Yes</span>`
+      :`<span style="color:#8b949e">❌ No</span>`;
+  }
+
+  function row(x,isContinuous){
+    const effectStr=x.effect==null?"—":(conv(x.effect)>=0?"+":"")+conv(x.effect);
+    const lbStr=x.lb==null?"—":(conv(x.lb)>=0?"+":"")+conv(x.lb);
+    const ubStr=x.ub==null?"—":(conv(x.ub)>=0?"+":"")+conv(x.ub);
+    const color=x.effect==null?"#8b949e":(x.effect>=0?"#56d364":"#f85149");
+    return`<tr>
+      <td class="metric">${x.label.replace(" — hrs before bed","").replace(" (0/1)","").replace("Vitamin ","Vit ")}</td>
+      <td>${x.n}</td>
+      ${isContinuous?`<td>${x.avgX}h</td>`:""}
+      <td style="color:${color}">${effectStr}${isContinuous?"/hr":""}</td>
+      <td>${lbStr}</td>
+      <td>${ubStr}</td>
+      <td>${x.p}</td>
+      <td>${sigCell(x)}</td>
+    </tr>`;
+  }
+
+  const continuous=results.filter(x=>x.isHrs||x.label==="Sleep Duration (hrs)");
+  const categorical=results.filter(x=>!(x.isHrs||x.label==="Sleep Duration (hrs)"));
+
+  const contHead=`<tr><th class="metric">Metric</th><th>n</th><th>Avg Hrs</th><th>Effect (${unit})</th><th>LB</th><th>UB</th><th>p</th><th>Sig?</th></tr>`;
+  const catHead=`<tr><th class="metric">Metric</th><th>n</th><th>Effect (${unit})</th><th>LB</th><th>UB</th><th>p</th><th>Sig?</th></tr>`;
+
+  el.innerHTML=`
+    ${continuous.length?`<div class="card-title" style="margin-top:4px">⏱️ Continuous (Timing) Variables</div>
+      <div class="tablewrap"><table>${contHead}${continuous.map(x=>row(x,true)).join("")}</table></div>`:""}
+    ${categorical.length?`<div class="card-title" style="margin-top:16px">☑️ Categorical Variables</div>
+      <div class="tablewrap"><table>${catHead}${categorical.map(x=>row(x,false)).join("")}</table></div>`:""}
+    <div style="font-size:11px;color:#8b949e;margin-top:8px">Effect = points (or minutes) per hour earlier for timing factors, or the difference between true/false nights for yes-no factors. LB/UB = 95% confidence interval — if it crosses zero, the effect isn't reliably different from "no effect," even if the row shows "sig" on its own r/p.</div>
+  `;
+}
+
+// ── MED TIMING ────────────────────────────────────────────────────────────────
+function renderMedSelect(){
+  const sel=document.getElementById("med-select");
+  const names=[...new Set(entries.flatMap(e=>(e.meds||[]).map(m=>m.name)))];
+  sel.innerHTML=names.map(n=>`<option>${n}</option>`).join("");
+  if(names.length)renderMed();
+}
+
+function renderMed(){
+  const name=document.getElementById("med-select").value;
+  if(!name)return;
+
+  const data=entries.map(e=>{
+    const doses=(e.meds||[]).filter(x=>x.name===name).map(x=>parseFloat(x.hrs)).filter(h=>!isNaN(h));
+    if(!doses.length)return null;
+    return{hrs:Math.min(...doses),score:e.score,dur:e.duration}; // closest dose to bedtime
+  }).filter(Boolean);
+
+  const mEl=document.getElementById("med-metrics");
+  if(data.length===0){
+    mEl.innerHTML=`<div style="color:#58a6ff;font-size:13px">Not enough data for ${name} yet.</div>`;
+    document.getElementById("med-early-late").innerHTML="";
+    document.getElementById("med-info").innerHTML="";
+    if(medChart){medChart.destroy();medChart=null;}
+    return;
+  }
+
+  const avgH=(data.reduce((a,b)=>a+b.hrs,0)/data.length).toFixed(1);
+  const{r,p}=pearsonR(data.map(d=>d.hrs),data.map(d=>d.score));
+
+  mEl.innerHTML=`
+    <div class="metric"><div class="mlabel">Avg Hrs Before Bed</div><div class="mval">${avgH}h</div><div class="msub">${data.length} nights</div></div>
+    ${r!=null?`<div class="metric"><div class="mlabel" style="font-size:13px">r vs Sleep Score</div><div class="mval" style="color:${r>0?"#3fb950":"#f85149"};font-size:28px">${r>0?"+":""}${r}</div><div class="msub" style="font-size:13px">${corrStrength(r)} · ${p<0.05?"✓ sig":"not sig"}</div></div>`:""}
+  `;
+
+  // Dynamic cutoff: the median of THIS medication's own logged times, not a fixed 8h.
+  // A fixed threshold breaks down for meds like Ambien/Unisom that are always taken right at
+  // bedtime — with 8h fixed, every dose would land in "Late" and Early/Late would be meaningless.
+  // The median naturally splits roughly half-and-half around however this specific med is actually used.
+  const sortedHrs=[...data.map(d=>d.hrs)].sort((a,b)=>a-b);
+  const mid=Math.floor(sortedHrs.length/2);
+  const threshold=sortedHrs.length%2?sortedHrs[mid]:(sortedHrs[mid-1]+sortedHrs[mid])/2;
+  const thresholdStr=Math.round(threshold*10)/10;
+  const early=data.filter(d=>d.hrs>=threshold);
+  const late=data.filter(d=>d.hrs<threshold);
+  const avgE=early.length?(early.reduce((a,b)=>a+b.score,0)/early.length).toFixed(1):null;
+  const avgL=late.length?(late.reduce((a,b)=>a+b.score,0)/late.length).toFixed(1):null;
+
+  document.getElementById("med-early-late").innerHTML=`
+    <div style="background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:14px;text-align:center">
+      <div style="font-size:14px;color:#58a6ff;margin-bottom:6px">Early (≥${thresholdStr}h before bed)</div>
+      <div style="font-size:26px;font-weight:700;font-family:monospace;color:${avgE&&avgL?(parseFloat(avgE)>=parseFloat(avgL)?'#3fb950':'#f85149'):'#58a6ff'}">${avgE||"—"}</div>
+      <div style="font-size:11px;color:#58a6ff;margin-top:4px">avg score · n=${early.length}</div>
+    </div>
+    <div style="background:#1c2128;border:1px solid #21262d;border-radius:8px;padding:14px;text-align:center">
+      <div style="font-size:14px;color:#58a6ff;margin-bottom:6px">Late (&lt;${thresholdStr}h before bed)</div>
+      <div style="font-size:26px;font-weight:700;font-family:monospace;color:${avgE&&avgL?(parseFloat(avgL)>=parseFloat(avgE)?'#3fb950':'#f85149'):'#58a6ff'}">${avgL||"—"}</div>
+      <div style="font-size:11px;color:#58a6ff;margin-top:4px">avg score · n=${late.length}</div>
+    </div>
+    <div style="font-size:11px;color:#c9d1d9;font-weight:600;margin-top:8px;text-align:center">Cutoff = median of your own ${name} times (${thresholdStr}h), not a fixed threshold</div>
+  `;
+
+  // Judgment / info line — always computed and shown, never blocks the chart below.
+  if (r === null) {
+    document.getElementById('med-info').innerHTML =
+      '<strong style="font-size:16px">⚠️ Inconclusive</strong><br>' +
+      '<span style="color:#c9d1d9;font-size:13px;font-weight:600">Need at least 2 nights with a recorded time to calculate a correlation (' + data.length + ' so far).</span>';
+  } else {
+    const absR = Math.abs(r);
+    let judgment, strength;
+    if (data.length < 20) {
+      judgment = '⚠️ Inconclusive';
+      strength = 'Need at least 20 nights for a reliable conclusion (' + data.length + ' so far)';
+    } else if (absR >= 0.65) {
+      judgment = r > 0 ? '✅ Strong positive correlation' : '✅ Strong negative correlation';
+      strength = 'Reliable finding with n=' + data.length;
+    } else if (absR >= 0.4) {
+      judgment = r > 0 ? '🟡 Moderate positive correlation' : '🟡 Moderate negative correlation';
+      strength = 'Moderate signal with n=' + data.length + ', more data strengthens this';
+    } else if (absR >= 0.2) {
+      judgment = '🟠 Weak correlation';
+      strength = 'Weak signal — likely noise even with n=' + data.length;
+    } else {
+      judgment = '⬜ No correlation';
+      strength = 'No meaningful relationship detected (n=' + data.length + ')';
+    }
+    const direction = r > 0
+      ? 'taking ' + name + ' earlier in the day correlates with better sleep score'
+      : 'taking ' + name + ' closer to bedtime correlates with better sleep score';
+    document.getElementById('med-info').innerHTML =
+      '<strong style="font-size:16px">' + judgment + '</strong><br>' +
+      'r = ' + r + ' — ' + direction + '.<br>' +
+      '<span style="color:#c9d1d9;font-size:13px;font-weight:600">' + strength + '</span>';
+  }
+
+  // Scatter — always shown for any n>=1. Trend line only drawn when there are 2+ points
+  // and the hours actually vary (otherwise the slope is undefined/divides by zero).
+  if(medChart){medChart.destroy();medChart=null;}
+  const mn=Math.min(...data.map(d=>d.hrs)),mx=Math.max(...data.map(d=>d.hrs));
+  let sumX=0,sumY=0,sumXY=0,sumX2=0,n=data.length;
+  data.forEach(d=>{sumX+=d.hrs;sumY+=d.score;sumXY+=d.hrs*d.score;sumX2+=d.hrs*d.hrs;});
+  const denom=n*sumX2-sumX*sumX;
+  const canTrend=n>=2&&denom!==0;
+  const slope=canTrend?(n*sumXY-sumX*sumY)/denom:0;
+  const intercept=canTrend?(sumY-slope*sumX)/n:0;
+
+  const datasets=[
+    {label:"Nights",data:data.map(d=>({x:d.hrs,y:d.score})),
+     backgroundColor:"rgba(88,166,255,0.65)",pointRadius:6,pointHoverRadius:8}
+  ];
+  if(canTrend){
+    datasets.push({label:"Trend",type:"line",
+      data:[{x:mn,y:slope*mn+intercept},{x:mx,y:slope*mx+intercept}],
+      borderColor:"#f0883e",borderWidth:2.5,pointRadius:0,tension:0});
+  }
+
+  medChart=new Chart(document.getElementById("med-chart"),{
+    type:"scatter",
+    data:{datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{title:{display:true,text:"Hours before bed",color:"#e6edf3",font:{size:13}},
+           ticks:{color:"#e6edf3",font:{size:13}},grid:{color:"rgba(255,255,255,0.06)"}},
+        y:{min:30,max:105,title:{display:true,text:"Sleep score",color:"#e6edf3",font:{size:13}},
+           ticks:{color:"#e6edf3",font:{size:13}},grid:{color:"rgba(255,255,255,0.06)"}}
+      }}
+  });
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function showPage(id,tab){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  if(tab)tab.classList.add("active");
+  if(id==="data")renderData();
+  if(id==="summary")renderSummaryPage();
+  if(id==="lifestyle")renderLifestylePage();
+  if(id==="corr")renderCorr();
+  if(id==="med"){renderMedSelect();}
+}
+
+function toggleSettings(){
+  document.getElementById("settings-panel").classList.toggle("open");
+}
+
+function saveGS(){
+  gsConfig.sheetId=document.getElementById("gs-sheet-id").value;
+  gsConfig.token=document.getElementById("gs-token").value;
+  localStorage.setItem("sleep_gs",JSON.stringify(gsConfig));
+}
+
+function setSyncStatus(msg,color){
+  const el=document.getElementById("sync-status");
+  el.textContent=msg;el.style.color=color||"#7d8590";
+}
+
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.style.opacity="1";
+  setTimeout(()=>t.style.opacity="0",2500);
+}
+</script>
+</body>
+</html>
